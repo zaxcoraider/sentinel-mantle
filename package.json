@@ -1,0 +1,16 @@
+{
+  "name": "sentinel-mantle",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:monitor": "pnpm --filter monitor dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "gen:abis": "pnpm --filter web gen:abis"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

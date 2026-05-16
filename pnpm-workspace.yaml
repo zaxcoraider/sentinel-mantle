@@ -1,0 +1,4 @@
+packages:
+  - 'web'
+  - 'monitor'
+  - 'demo-agents'

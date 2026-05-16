@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Foundry
+/contracts/out/
+/contracts/cache/
+/contracts/broadcast/
+!/contracts/broadcast/*/5000/
+!/contracts/broadcast/*/5003/
+
+# Next.js
+/web/.next/
+/web/out/
+
+# Build
+dist/
+build/
+
+# Local data
+/monitor/data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+*.jsonl

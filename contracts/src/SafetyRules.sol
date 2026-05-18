@@ -127,7 +127,6 @@ contract SafetyRules is Ownable {
         uint8 _timeOfDayMin,
         uint8 _timeOfDayMax
     ) Ownable(initialOwner) {
-        if (initialOwner == address(0)) revert ZeroAddress();
         if (_maxDrawdownBps > 10_000) revert InvalidBps(_maxDrawdownBps);
         if (_oracleDeviationBps > 10_000) revert InvalidBps(_oracleDeviationBps);
         if (_timeOfDayMin > 23) revert InvalidHour(_timeOfDayMin);

@@ -1,14 +1,41 @@
 {
   "network": "mantle-sepolia",
   "chainId": 5003,
-  "deployedAt": "2026-05-16",
+  "deployedAt": "2026-05-18",
+  "deployer": "0xDb45be034CAdBC5dc98ef1209fB473ae929828f4",
+  "monitor": "0x92e8652423f53Ac10F2523A5d652e11F370Adfb6",
   "contracts": {
+    "ReputationOracle": {
+      "address": "0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f",
+      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f",
+      "verified": false
+    },
+    "EmergencyVault": {
+      "address": "0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5",
+      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5",
+      "verified": false,
+      "withdrawDelay": 300
+    },
+    "AgentRegistry": {
+      "address": "0x5c570A7C3De89bd4E27df65D6aFafD66DF549356",
+      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x5c570A7C3De89bd4E27df65D6aFafD66DF549356",
+      "verified": false,
+      "identityRegistry": "0xbbb129508fdCCB59334432c5C3d6b4251be8CA91"
+    },
     "SentinelGuard": {
-      "address": "0x586448d146BcDD7FBb1F3dd8c3E7e0506cA46c0d",
-      "deployer": "0xDb45be034CAdBC5dc98ef1209fB473ae929828f4",
-      "monitor": "0x92e8652423f53Ac10F2523A5d652e11F370Adfb6",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x586448d146BcDD7FBb1F3dd8c3E7e0506cA46c0d",
-      "verified": true
+      "address": "0x929EC63c07A0d34358DF34ac073F2bf6eCF22642",
+      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642",
+      "verified": false
+    },
+    "MockIdentityRegistry": {
+      "address": "0xbbb129508fdCCB59334432c5C3d6b4251be8CA91",
+      "explorer": "https://explorer.sepolia.mantle.xyz/address/0xbbb129508fdCCB59334432c5C3d6b4251be8CA91",
+      "verified": false,
+      "note": "Testnet stand-in for the ERC-8004 Identity Registry"
     }
+  },
+  "supersededSkeleton": {
+    "SentinelGuard": "0x586448d146BcDD7FBb1F3dd8c3E7e0506cA46c0d",
+    "note": "Phase 1.2 skeleton — replaced by the Phase 2.5 SentinelGuard above"
   }
 }

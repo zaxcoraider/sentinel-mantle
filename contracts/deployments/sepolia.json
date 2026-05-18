@@ -8,7 +8,7 @@
       "deployer": "0xDb45be034CAdBC5dc98ef1209fB473ae929828f4",
       "monitor": "0x92e8652423f53Ac10F2523A5d652e11F370Adfb6",
       "explorer": "https://explorer.sepolia.mantle.xyz/address/0x586448d146BcDD7FBb1F3dd8c3E7e0506cA46c0d",
-      "verified": false
+      "verified": true
     }
   }
 }

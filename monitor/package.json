@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "monitor:debug": "tsx src/debug.ts"
   },
   "dependencies": {
     "viem": "^2.21.58"

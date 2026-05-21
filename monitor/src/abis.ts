@@ -61,6 +61,33 @@ export const sentinelGuardEvents = [
   },
 ] as const;
 
+// SafetyRules: scalar rule getters (read by RulesCache) + the allowlist event
+// (folded to reconstruct the current allowed-protocol set, since the on-chain
+// mapping isn't enumerable). Keep in sync with contracts/src/SafetyRules.sol.
+export const safetyRulesAbi = [
+  { type: "function", name: "maxDrawdownBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "maxTxPerHour", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "oracleDeviationBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "dailyVolumeCapUsd", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "timeOfDayMin", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "timeOfDayMax", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  {
+    type: "function",
+    name: "allowedProtocols",
+    stateMutability: "view",
+    inputs: [{ name: "protocol", type: "address" }],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "event",
+    name: "ProtocolAllowlistChanged",
+    inputs: [
+      { name: "protocol", type: "address", indexed: true },
+      { name: "allowed", type: "bool", indexed: false },
+    ],
+  },
+] as const;
+
 // Generic Uniswap-V2-style Swap event — Merchant Moe, and most Mantle AMMs, are
 // V2 forks. Used to detect agent trading activity / implied price off-chain.
 // DEX pool addresses are config-driven (never hardcoded) — see config.dexPools.

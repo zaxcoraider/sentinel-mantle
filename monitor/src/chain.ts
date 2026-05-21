@@ -22,7 +22,7 @@ import { mantle, mantleSepoliaTestnet } from "viem/chains";
 import type { ClientFactory, EventLog, WatchableClient, WatchSubscription } from "./listener.js";
 import { silentLogger, type Logger } from "./log.js";
 
-const chainFor = (chainId: number) =>
+export const chainFor = (chainId: number) =>
   chainId === mantle.id ? mantle : mantleSepoliaTestnet;
 
 const isWs = (url: string): boolean => url.startsWith("ws");

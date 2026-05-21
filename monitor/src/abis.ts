@@ -61,6 +61,28 @@ export const sentinelGuardEvents = [
   },
 ] as const;
 
+// SentinelGuard write/read functions used by the trigger pipeline.
+// Keep in sync with contracts/src/SentinelGuard.sol.
+export const sentinelGuardFunctions = [
+  {
+    type: "function",
+    name: "triggerCircuitBreaker",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agent", type: "address" },
+      { name: "reason", type: "bytes32" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "isPaused",
+    stateMutability: "view",
+    inputs: [{ name: "agent", type: "address" }],
+    outputs: [{ type: "bool" }],
+  },
+] as const;
+
 // SafetyRules: scalar rule getters (read by RulesCache) + the allowlist event
 // (folded to reconstruct the current allowed-protocol set, since the on-chain
 // mapping isn't enumerable). Keep in sync with contracts/src/SafetyRules.sol.

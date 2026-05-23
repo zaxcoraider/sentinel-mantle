@@ -1,24 +1,21 @@
-// Sentinel Monitor — entry point (Phase 3.4: full pipeline).
+// Sentinel Monitor — entry point (Phase 3.4: full pipeline + Phase 4.4: SSE).
 //
 // Flow: EventListener decodes chain events -> StateStore updates per-agent state
 // -> on each agent action, AnomalyEngine evaluates against cached SafetyRules ->
 // a `critical` result fires the on-chain circuit breaker via Trigger.
-//
-// Live end-to-end today: tx-rate, protocol-allowlist, and off-hours detection
-// (they need only event data + on-chain rules). Drawdown / oracle / volume need
-// a portfolio valuation feed (balances x Pyth) — StateStore exposes the hooks
-// (recordValuation / recordVolume); wiring that data source is the next step.
+// All significant events are also fanned out via SseHub -> GET /events (watch page).
 
 import type { Address } from "viem";
 import { agentRegistryEvents, dexV2SwapEvent, sentinelGuardEvents } from "./abis.js";
 import { makePublicClient, viemClientFactory } from "./chain.js";
 import { loadConfig } from "./config.js";
 import { openDb, type Database } from "./db.js";
-import { createHealthServer, type HealthServer } from "./health.js";
+import { createHealthServer, type HealthServer, type AgentStatusEntry } from "./health.js";
 import { EventListener } from "./listener.js";
 import { createLogger, type LogLevel } from "./log.js";
 import { AnomalyEngine } from "./anomaly.js";
 import { createViemRulesReader, RulesCache } from "./rules-cache.js";
+import { SseHub } from "./sse.js";
 import { StateStore } from "./state.js";
 import { createViemGuardWriter, Trigger } from "./trigger.js";
 import type {
@@ -31,6 +28,7 @@ import type {
 import { Watchlist } from "./watchlist.js";
 
 const STATE_PERSIST_MS = 60_000;
+const SSE_HEARTBEAT_MS = 30_000;
 
 const main = (): void => {
   const network = process.env.MONITOR_NETWORK ?? "sepolia";
@@ -59,8 +57,9 @@ const main = (): void => {
   );
   const engine = new AnomalyEngine();
 
-  // Trigger is only built when a hot-wallet key is configured; otherwise the
-  // monitor runs in detect-only mode (logs criticals, never sends a tx).
+  // In-memory agent status map — drives /agents endpoint and watch page sidebar.
+  const agentStatus = new Map<Address, AgentStatusEntry>();
+
   const trigger = config.monitorPrivateKey
     ? new Trigger(
         createViemGuardWriter({
@@ -83,6 +82,9 @@ const main = (): void => {
     logger,
   });
 
+  // SSE hub — all connected watch-page browsers subscribe here.
+  const hub = new SseHub();
+
   const noteBlock = (block: bigint | null): void => {
     if (block !== null && block > lastBlock) lastBlock = block;
   };
@@ -92,10 +94,19 @@ const main = (): void => {
   const handleAgentTx = async (p: AgentTxPayload): Promise<void> => {
     noteBlock(p.blockNumber);
     const watched = watchlist.get(p.agent);
-    if (!watched || !watched.active) return; // not a guarded agent
+    if (!watched || !watched.active) return;
 
     const tsSec = Math.floor(Date.now() / 1000);
     stateStore.recordTx(p.agent, tsSec);
+
+    hub.broadcast("agent_tx", {
+      agent: p.agent,
+      target: p.target,
+      value: p.value.toString(),
+      selector: p.selector,
+      txHash: p.txHash,
+      block: p.blockNumber?.toString(),
+    });
 
     let rules;
     try {
@@ -118,6 +129,19 @@ const main = (): void => {
     for (const r of results) {
       if (r.severity === "warn") {
         logger.warn("anomaly (warn)", { agent: p.agent, type: r.type, message: r.message });
+        agentStatus.set(p.agent, {
+          agent: p.agent,
+          status: "warn",
+          tokenId: watched.tokenId.toString(),
+          lastSeenMs: Date.now(),
+        });
+        hub.broadcast("anomaly_warn", {
+          agent: p.agent,
+          anomalyType: r.type,
+          message: r.message,
+          txHash: p.txHash,
+          block: p.blockNumber?.toString(),
+        });
       }
     }
 
@@ -129,7 +153,22 @@ const main = (): void => {
       type: critical.type,
       message: critical.message,
     });
-    if (!trigger) return; // detect-only mode
+
+    agentStatus.set(p.agent, {
+      agent: p.agent,
+      status: "tripped",
+      tokenId: watched.tokenId.toString(),
+      lastSeenMs: Date.now(),
+    });
+    hub.broadcast("circuit_breaker", {
+      agent: p.agent,
+      anomalyType: critical.type,
+      message: critical.message,
+      txHash: p.txHash,
+      block: p.blockNumber?.toString(),
+    });
+
+    if (!trigger) return;
 
     try {
       const outcome = await trigger.fire(p.agent, critical.reasonHash, critical.message);
@@ -159,12 +198,32 @@ const main = (): void => {
       registeredAtBlock: p.blockNumber ?? 0n,
       updatedAt: Date.now(),
     });
+    agentStatus.set(p.agent, {
+      agent: p.agent,
+      status: "guarded",
+      tokenId: p.tokenId.toString(),
+      lastSeenMs: Date.now(),
+    });
+    hub.broadcast("agent_registered", {
+      agent: p.agent,
+      tokenId: p.tokenId.toString(),
+      rules: p.rules,
+      txHash: p.txHash,
+      block: p.blockNumber?.toString(),
+    });
     logger.info("agent registered", { agent: p.agent, tokenId: p.tokenId, rules: p.rules });
   });
 
   listener.on("agentDeregistered", (p: AgentDeregisteredPayload) => {
     noteBlock(p.blockNumber);
     watchlist.deactivate(p.agent);
+    agentStatus.delete(p.agent);
+    hub.broadcast("agent_deregistered", {
+      agent: p.agent,
+      tokenId: p.tokenId.toString(),
+      txHash: p.txHash,
+      block: p.blockNumber?.toString(),
+    });
     logger.info("agent deregistered", { agent: p.agent, tokenId: p.tokenId });
   });
 
@@ -256,9 +315,18 @@ const main = (): void => {
 
   listener.start();
 
-  // ---- Periodic state snapshot + health endpoint --------------------------
+  // ---- Periodic state snapshot + health/SSE server -------------------------
 
   const persistTimer = setInterval(() => stateStore.persistAll(db), STATE_PERSIST_MS);
+
+  const sseHeartbeatTimer = setInterval(() => {
+    hub.ping();
+    hub.broadcast("stats", {
+      agentsWatched: watchlist.activeAgents().length,
+      uptimeSec: Math.floor((Date.now() - startedAt) / 1000),
+      lastBlock: lastBlock.toString(),
+    });
+  }, SSE_HEARTBEAT_MS);
 
   const health: HealthServer = createHealthServer(
     config.healthPort,
@@ -270,6 +338,19 @@ const main = (): void => {
       usingFallback: listener.onFallback,
     }),
     logger,
+    {
+      hub,
+      agents: (): AgentStatusEntry[] => {
+        // Sync in-memory map with persistent watchlist for any entries we might
+        // have missed during the current process lifetime (e.g. after restart).
+        for (const agent of watchlist.activeAgents()) {
+          if (!agentStatus.has(agent)) {
+            agentStatus.set(agent, { agent, status: "guarded", tokenId: "?", lastSeenMs: 0 });
+          }
+        }
+        return Array.from(agentStatus.values());
+      },
+    },
   );
 
   // ---- Graceful shutdown ---------------------------------------------------
@@ -277,6 +358,7 @@ const main = (): void => {
   const shutdown = (signal: string): void => {
     logger.info("shutting down", { signal });
     clearInterval(persistTimer);
+    clearInterval(sseHeartbeatTimer);
     listener.stop();
     health.close();
     stateStore.persistAll(db);

@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "MANTLE_SEPOLIA_RPC_URL": "@mantle-sepolia-rpc-url"
+  }
+}

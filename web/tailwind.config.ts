@@ -44,6 +44,14 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        sentinel: {
+          blue: "#2563eb",
+          black: "#0a0a0a",
+          white: "#fafafa",
+          "gray-1": "#737373",
+          "gray-2": "#262626",
+          danger: "#dc2626",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -51,8 +59,11 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        mono: ["'JetBrains Mono'", "monospace"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "'JetBrains Mono'", "'IBM Plex Mono'", "monospace"],
+      },
+      fontSize: {
+        hero: ["72px", { lineHeight: "1", fontWeight: "700" }],
       },
       keyframes: {
         "accordion-down": {
@@ -63,10 +74,20 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "slide-in-top": {
+          from: { opacity: "0", transform: "translateY(-8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "flash-red": {
+          "0%, 100%": { backgroundColor: "transparent" },
+          "50%": { backgroundColor: "rgba(220,38,38,0.15)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "slide-in-top": "slide-in-top 0.2s cubic-bezier(0.4,0,0.2,1)",
+        "flash-red": "flash-red 0.6s cubic-bezier(0.4,0,0.2,1)",
       },
     },
   },

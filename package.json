@@ -6,7 +6,6 @@
     "dev:web": "pnpm --filter web dev",
     "dev:monitor": "pnpm --filter monitor dev",
     "build": "pnpm -r build",
-    "vercel-build": "pnpm --filter sentinel-web build && cp -r web/.next .next",
     "test": "pnpm -r test",
     "gen:abis": "pnpm --filter web gen:abis"
   },

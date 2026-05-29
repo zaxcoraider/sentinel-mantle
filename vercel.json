@@ -1,6 +1,6 @@
 {
   "installCommand": "pnpm install --ignore-scripts",
-  "buildCommand": "pnpm vercel-build",
-  "outputDirectory": ".next",
+  "buildCommand": "pnpm --filter sentinel-web build",
+  "outputDirectory": "web/.next",
   "framework": "nextjs"
 }

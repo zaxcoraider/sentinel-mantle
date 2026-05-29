@@ -1,0 +1,6 @@
+{
+  "installCommand": "pnpm install --ignore-scripts",
+  "buildCommand": "pnpm vercel-build",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}

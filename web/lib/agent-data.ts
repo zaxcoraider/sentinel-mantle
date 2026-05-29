@@ -11,6 +11,7 @@ import {
   SentinelGuardAbi,
   SafetyRulesAbi,
   ReputationOracleAbi,
+  MockIdentityRegistryAbi,
 } from './contracts';
 
 const SEP = DEPLOYMENTS.sepolia;
@@ -49,6 +50,12 @@ export interface AgentReputation {
   history: RepHistory[];
 }
 
+export interface AgentMetadata {
+  name?: string;
+  image?: string;
+  description?: string;
+}
+
 export interface AgentDetail {
   agent: Address;
   isGuarded: boolean;
@@ -59,6 +66,7 @@ export interface AgentDetail {
   nativeMntBalance: bigint;
   daysGuarded: number;
   owner: Address | null;
+  metadata: AgentMetadata | null;
 }
 
 export interface LeaderboardEntry {
@@ -70,6 +78,49 @@ export interface LeaderboardEntry {
   isPaused: boolean;
   registeredAt: bigint;
 }
+
+// ---- ERC-8004 metadata fetch -----------------------------------------------
+
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+
+const resolveUri = (uri: string): string => {
+  if (uri.startsWith('ipfs://')) return IPFS_GATEWAY + uri.slice(7);
+  return uri;
+};
+
+const fetchMetadata = async (tokenId: bigint): Promise<AgentMetadata | null> => {
+  try {
+    const uri = (await publicClient.readContract({
+      address: SEP.MockIdentityRegistry,
+      abi: MockIdentityRegistryAbi,
+      functionName: 'tokenURI',
+      args: [tokenId],
+    })) as string;
+    if (!uri) return null;
+
+    let json: unknown;
+    if (uri.startsWith('data:application/json;base64,')) {
+      const b64 = uri.slice('data:application/json;base64,'.length);
+      json = JSON.parse(Buffer.from(b64, 'base64').toString('utf-8'));
+    } else if (uri.startsWith('data:application/json,')) {
+      json = JSON.parse(decodeURIComponent(uri.slice('data:application/json,'.length)));
+    } else {
+      const res = await fetch(resolveUri(uri), { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) return null;
+      json = await res.json();
+    }
+
+    if (typeof json !== 'object' || json === null) return null;
+    const m = json as Record<string, unknown>;
+    return {
+      name: typeof m.name === 'string' ? m.name : undefined,
+      image: typeof m.image === 'string' ? resolveUri(m.image) : undefined,
+      description: typeof m.description === 'string' ? m.description : undefined,
+    };
+  } catch {
+    return null;
+  }
+};
 
 // ---- Agent detail ----------------------------------------------------------
 
@@ -84,6 +135,7 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
     nativeMntBalance: BigInt(0),
     daysGuarded: 0,
     owner: null,
+    metadata: null,
   };
 
   try {
@@ -186,6 +238,10 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
         ? Math.floor((nowSec - Number(registeredAt)) / 86400)
         : 0;
 
+    const metadata = guardConfig
+      ? await fetchMetadata(guardConfig.erc8004TokenId)
+      : null;
+
     return {
       agent,
       isGuarded: true,
@@ -212,6 +268,7 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
         mntBalance.status === 'fulfilled' ? (mntBalance.value as bigint) : BigInt(0),
       daysGuarded,
       owner: owner.status === 'fulfilled' ? (owner.value as Address) : null,
+      metadata,
     };
   } catch {
     return EMPTY;

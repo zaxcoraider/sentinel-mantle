@@ -3,6 +3,7 @@ import { isAddress, formatUnits, type Address } from 'viem';
 import { Nav } from '@/components/Nav';
 import { SafetyRulesDisplay } from '@/components/agent/SafetyRulesDisplay';
 import { ReputationChart } from '@/components/agent/ReputationChart';
+import { RulesEditorButton } from '@/components/agent/RulesEditorButton';
 import { getAgentDetail } from '@/lib/agent-data';
 import { DEPLOYMENTS } from '@/lib/contracts';
 import { cn } from '@/lib/utils';
@@ -95,33 +96,53 @@ export default async function AgentPage({
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-10 space-y-8">
 
           {/* Header */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-mono font-bold text-base text-sentinel-white break-all">
-                {agent}
-              </h1>
-              <StatusBadge
-                paused={data.isPaused}
-                active={data.config?.active ?? false}
+          <div className="flex gap-4 items-start">
+            {data.metadata?.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.metadata.image}
+                alt={data.metadata.name ?? 'agent'}
+                className="w-20 h-20 border border-sentinel-gray-2 object-cover shrink-0"
               />
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              <a
-                href={`${expBase}/address/${agent}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-[10px] text-sentinel-gray-1 hover:text-sentinel-white transition-colors"
-              >
-                Mantlescan ↗
-              </a>
-              <span className="font-mono text-[10px] text-sentinel-gray-1">
-                Token #{data.config?.erc8004TokenId?.toString() ?? '—'}
-              </span>
-              {data.daysGuarded > 0 && (
-                <span className="font-mono text-[10px] text-sentinel-gray-1">
-                  Guarded {data.daysGuarded}d
-                </span>
+            )}
+            <div className="space-y-2 min-w-0 flex-1">
+              {data.metadata?.name && (
+                <h1 className="font-mono font-bold text-xl text-sentinel-white">
+                  {data.metadata.name}
+                </h1>
               )}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-mono text-xs text-sentinel-gray-1 break-all">
+                  {agent}
+                </span>
+                <StatusBadge
+                  paused={data.isPaused}
+                  active={data.config?.active ?? false}
+                />
+              </div>
+              {data.metadata?.description && (
+                <p className="font-mono text-xs text-sentinel-gray-1 leading-relaxed">
+                  {data.metadata.description}
+                </p>
+              )}
+              <div className="flex gap-3 flex-wrap">
+                <a
+                  href={`${expBase}/address/${agent}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[10px] text-sentinel-gray-1 hover:text-sentinel-white transition-colors"
+                >
+                  Mantlescan ↗
+                </a>
+                <span className="font-mono text-[10px] text-sentinel-gray-1">
+                  Token #{data.config?.erc8004TokenId?.toString() ?? '—'}
+                </span>
+                {data.daysGuarded > 0 && (
+                  <span className="font-mono text-[10px] text-sentinel-gray-1">
+                    Guarded {data.daysGuarded}d
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -185,9 +206,18 @@ export default async function AgentPage({
           {/* Safety Rules */}
           {data.rules && data.config && (
             <div className="space-y-2">
-              <h2 className="font-mono font-bold text-sm text-sentinel-white uppercase tracking-widest">
-                Safety Rules
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-mono font-bold text-sm text-sentinel-white uppercase tracking-widest">
+                  Safety Rules
+                </h2>
+                {data.owner && (
+                  <RulesEditorButton
+                    rulesAddress={data.config.rulesContract}
+                    owner={data.owner}
+                    rules={data.rules}
+                  />
+                )}
+              </div>
               <SafetyRulesDisplay
                 rules={data.rules}
                 rulesAddress={data.config.rulesContract}

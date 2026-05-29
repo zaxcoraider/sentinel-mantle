@@ -6,14 +6,18 @@
   "scripts": {
     "setup": "tsx src/setup.ts",
     "agents:start": "tsx src/index.ts",
-    "agents:reset": "tsx src/reset.ts"
+    "agents:reset": "tsx src/reset.ts",
+    "agent:yieldchaser": "tsx src/yieldchaser.ts",
+    "agent:protocolhopper": "tsx src/protocolhopper.ts",
+    "agent:insomniac": "tsx src/insomniac.ts",
+    "manual:trigger": "tsx src/manual-trigger.ts"
   },
   "dependencies": {
-    "ethers": "^6.13.4",
     "viem": "^2.21.58",
     "node-cron": "^3.0.3",
     "chalk": "^5.3.0",
-    "boxen": "^8.0.1"
+    "boxen": "^8.0.1",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

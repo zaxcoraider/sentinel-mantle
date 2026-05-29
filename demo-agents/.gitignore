@@ -1,0 +1,6 @@
+.env
+.env.local
+.agent-keys.json
+agent-config.json
+node_modules/
+*.log

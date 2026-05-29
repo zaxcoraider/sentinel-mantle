@@ -1,5 +1,5 @@
 {
-  "installCommand": "pnpm install --filter sentinel-web...",
+  "installCommand": "pnpm install --ignore-scripts",
   "buildCommand": "cd web && pnpm build",
   "outputDirectory": "web/.next",
   "framework": "nextjs"

@@ -55,7 +55,7 @@ const main = (): void => {
   const rulesCache = new RulesCache(
     createViemRulesReader(makePublicClient(config.rpcUrl, config.chainId)),
   );
-  const engine = new AnomalyEngine();
+  const engine = new AnomalyEngine({ txRateEarlyWarning: config.txRateEarlyWarning });
 
   // In-memory agent status map — drives /agents endpoint and watch page sidebar.
   const agentStatus = new Map<Address, AgentStatusEntry>();

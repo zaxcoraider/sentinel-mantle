@@ -50,6 +50,8 @@ export interface MonitorConfig {
   addresses: MonitorAddresses;
   /** The monitor wallet the deployed SentinelGuard authorizes to pause. */
   monitorExpected: Address;
+  /** Tx-rate early-warning margin: trip this many tx before the on-chain cap. */
+  txRateEarlyWarning: bigint;
   /** Hot-wallet key — only needed by the trigger pipeline (Phase 3.4). */
   monitorPrivateKey?: Hex;
   pythEndpoint: string;
@@ -141,6 +143,7 @@ export const loadConfig = (network = "sepolia"): MonitorConfig => {
       emergencyVault: getAddress(deployment.contracts.EmergencyVault.address),
     },
     monitorExpected: getAddress(deployment.monitor),
+    txRateEarlyWarning: BigInt(process.env.TXRATE_EARLY_WARNING ?? "0"),
     monitorPrivateKey: parsePrivateKey(process.env.MONITOR_PRIVATE_KEY),
     pythEndpoint: process.env.PYTH_ENDPOINT ?? "https://hermes.pyth.network",
     alertWebhookUrl: process.env.ALERT_WEBHOOK_URL || undefined,

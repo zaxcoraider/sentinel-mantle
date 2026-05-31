@@ -68,6 +68,16 @@ describe("detectTxRate", () => {
     const r = detectTxRate({ ...baseState, txCountThisHour: 60 }, baseRules);
     expect(r).toMatchObject({ anomaly: true, severity: "critical" });
   });
+  it("early-warning trips before the on-chain cap", () => {
+    const rules = { ...baseRules, maxTxPerHour: 5n };
+    // earlyWarning=1 → effective cap 4 → count 5 is critical even though the
+    // on-chain rule (count > 5) would still allow it.
+    const r = detectTxRate({ ...baseState, txCountThisHour: 5 }, rules, 80n, 1n);
+    expect(r).toMatchObject({ anomaly: true, severity: "critical" });
+    // earlyWarning=0 reproduces the chain exactly: count 5 is NOT critical.
+    const baseline = detectTxRate({ ...baseState, txCountThisHour: 5 }, rules, 80n, 0n);
+    expect(baseline.severity).not.toBe("critical");
+  });
 });
 
 describe("detectProtocolViolation", () => {

@@ -8,7 +8,8 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "test": "vitest run",
-    "monitor:debug": "tsx src/debug.ts"
+    "monitor:debug": "tsx src/debug.ts",
+    "seed:watchlist": "tsx src/seed-watchlist.ts"
   },
   "dependencies": {
     "viem": "^2.21.58"

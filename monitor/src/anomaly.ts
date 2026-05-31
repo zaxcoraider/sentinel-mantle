@@ -84,13 +84,20 @@ export const detectTxRate = (
   state: AgentState,
   rules: SafetyRulesSnapshot,
   warnPercent: bigint = DEFAULT_WARN_PERCENT,
+  earlyWarning: bigint = 0n,
 ): AnomalyResult => {
   const count = BigInt(state.txCountThisHour);
-  if (count > rules.maxTxPerHour) {
-    return critical("MAX_TX_PER_HOUR", `${count} tx/hr exceeds limit ${rules.maxTxPerHour}`);
+  // The off-chain monitor can trip `earlyWarning` txs *before* the on-chain cap,
+  // so a runaway agent is frozen before its next call would revert on-chain (and
+  // thus never emit an event). earlyWarning=0 reproduces the exact on-chain `>`.
+  const effectiveLimit =
+    rules.maxTxPerHour > earlyWarning ? rules.maxTxPerHour - earlyWarning : 0n;
+  if (count > effectiveLimit) {
+    const label = earlyWarning > 0n ? "early-warning limit" : "limit";
+    return critical("MAX_TX_PER_HOUR", `${count} tx/hr exceeds ${label} ${effectiveLimit}`);
   }
-  if (nearing(count, rules.maxTxPerHour, warnPercent)) {
-    return warn("MAX_TX_PER_HOUR", `${count} tx/hr nearing limit ${rules.maxTxPerHour}`);
+  if (nearing(count, effectiveLimit, warnPercent)) {
+    return warn("MAX_TX_PER_HOUR", `${count} tx/hr nearing limit ${effectiveLimit}`);
   }
   return ok("MAX_TX_PER_HOUR");
 };
@@ -174,13 +181,22 @@ export const detectOffHours = (
 export interface AnomalyEngineOptions {
   /** Warn tier threshold as a percent of each limit (default 80). */
   warnPercent?: bigint;
+  /**
+   * How many transactions before the on-chain `maxTxPerHour` cap the off-chain
+   * monitor should treat as critical. Default 0 = exactly mirror the chain.
+   * A value of 1+ lets the monitor freeze a runaway agent one (or more) tx
+   * earlier — before the next call would revert on-chain and emit no event.
+   */
+  txRateEarlyWarning?: bigint;
 }
 
 export class AnomalyEngine {
   private readonly warnPercent: bigint;
+  private readonly txRateEarlyWarning: bigint;
 
   constructor(opts: AnomalyEngineOptions = {}) {
     this.warnPercent = opts.warnPercent ?? DEFAULT_WARN_PERCENT;
+    this.txRateEarlyWarning = opts.txRateEarlyWarning ?? 0n;
   }
 
   /** Run every detector and return only the results that flagged an anomaly. */
@@ -192,7 +208,7 @@ export class AnomalyEngine {
   ): AnomalyResult[] {
     const results = [
       detectDrawdown(state, rules, this.warnPercent),
-      detectTxRate(state, rules, this.warnPercent),
+      detectTxRate(state, rules, this.warnPercent, this.txRateEarlyWarning),
       detectProtocolViolation(state, rules, context.txTarget),
       detectOracleDeviation(state, rules, context.agentPrice, context.pythPrice, this.warnPercent),
       detectDailyVolume(state, rules, this.warnPercent),

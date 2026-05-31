@@ -39,3 +39,7 @@ Thumbs.db
 
 # Local session memory (never commit)
 SENTINEL_MEMORY.md
+
+# Local planning / staging — not for the public repo
+SENTINEL_BUILD_PLAN.md
+sentinel-deliverables/

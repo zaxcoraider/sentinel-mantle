@@ -4,33 +4,35 @@
   "deployedAt": "2026-05-30",
   "deployer": "0xDb45be034CAdBC5dc98ef1209fB473ae929828f4",
   "monitor": "0xbD729a358543933c3C83707E1038e3a409E2Cf43",
+  "verifiedOn": "mantlescan",
+  "verifiedAt": "2026-05-31",
   "contracts": {
     "ReputationOracle": {
       "address": "0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC",
-      "verified": false
+      "explorer": "https://sepolia.mantlescan.xyz/address/0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC",
+      "verified": true
     },
     "EmergencyVault": {
       "address": "0x418BA815CeaE1f4D3CE06E0190b6546647DD9865",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x418BA815CeaE1f4D3CE06E0190b6546647DD9865",
-      "verified": false,
+      "explorer": "https://sepolia.mantlescan.xyz/address/0x418BA815CeaE1f4D3CE06E0190b6546647DD9865",
+      "verified": true,
       "withdrawDelay": 300
     },
     "AgentRegistry": {
       "address": "0xF09f811397cbd9dE54a8505f22D4A276A2ED5c41",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0xF09f811397cbd9dE54a8505f22D4A276A2ED5c41",
-      "verified": false,
+      "explorer": "https://sepolia.mantlescan.xyz/address/0xF09f811397cbd9dE54a8505f22D4A276A2ED5c41",
+      "verified": true,
       "identityRegistry": "0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432"
     },
     "SentinelGuard": {
       "address": "0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7",
-      "verified": false
+      "explorer": "https://sepolia.mantlescan.xyz/address/0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7",
+      "verified": true
     },
     "MockIdentityRegistry": {
       "address": "0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432",
-      "explorer": "https://explorer.sepolia.mantle.xyz/address/0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432",
-      "verified": false,
+      "explorer": "https://sepolia.mantlescan.xyz/address/0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432",
+      "verified": true,
       "note": "Testnet stand-in for the ERC-8004 Identity Registry"
     }
   },

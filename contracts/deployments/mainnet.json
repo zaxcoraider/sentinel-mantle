@@ -9,34 +9,34 @@
       "address": "0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f",
       "explorer": "https://mantlescan.xyz/address/0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f",
       "deployTx": "0x20389f74b94562ddee20e40ee7a3325827443c7f0cac98340843ca90e144a311",
-      "verified": false
+      "verified": true
     },
     "EmergencyVault": {
       "address": "0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5",
       "explorer": "https://mantlescan.xyz/address/0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5",
       "deployTx": "0x6c8887bb37dff2f552c9025bbcb6ebaad1adc2224229050157f57275020888b8",
-      "verified": false,
+      "verified": true,
       "withdrawDelay": 86400
     },
     "AgentIdentityRegistry": {
       "address": "0xbbb129508fdCCB59334432c5C3d6b4251be8CA91",
       "explorer": "https://mantlescan.xyz/address/0xbbb129508fdCCB59334432c5C3d6b4251be8CA91",
       "deployTx": "0x7ba2d4b5d2640757f7fbe1d8064970f1c5c0f7c4cbcffb1848e0a1acccfbeb56",
-      "verified": false,
+      "verified": true,
       "note": "Sentinel's own ERC-8004-compatible identity registry (real Mantle ERC-8004 registry 0x8004A169... lacks a compatible getAgent(uint256) view)"
     },
     "AgentRegistry": {
       "address": "0x5c570A7C3De89bd4E27df65D6aFafD66DF549356",
       "explorer": "https://mantlescan.xyz/address/0x5c570A7C3De89bd4E27df65D6aFafD66DF549356",
       "deployTx": "0x5ffab39234d9ab9304091b054e242393f0f84cbca86c09edaf9f96c6db130e7b",
-      "verified": false,
+      "verified": true,
       "identityRegistry": "0xbbb129508fdCCB59334432c5C3d6b4251be8CA91"
     },
     "SentinelGuard": {
       "address": "0x929EC63c07A0d34358DF34ac073F2bf6eCF22642",
       "explorer": "https://mantlescan.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642",
       "deployTx": "0x2e7db0ed7ce844866a02d73744c790d0f669f12bfff6934ca9c08843d0bdf69a",
-      "verified": false
+      "verified": true
     }
   },
   "wiringConfirmed": {

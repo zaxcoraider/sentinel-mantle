@@ -8,7 +8,7 @@ import { getLeaderboard } from '@/lib/agent-data';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Sentinel Leaderboard — Top Guarded Agents on Mantle',
+  title: 'Sentinel Leaderboard · Top Guarded Agents on Mantle',
   description: 'Live reputation leaderboard for AI agents protected by Sentinel on Mantle Network.',
   openGraph: {
     title: 'Sentinel Leaderboard',
@@ -39,11 +39,12 @@ export default async function LeaderboardPage() {
           {/* Header */}
           <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
             <div>
-              <h1 className="font-mono font-bold text-xl text-sentinel-white tracking-wide uppercase">
+              <span className="eyebrow">Reputation</span>
+              <h1 className="font-sans font-bold text-3xl text-sentinel-white tracking-tight mt-1">
                 Leaderboard
               </h1>
               <p className="font-mono text-xs text-sentinel-gray-1 mt-1">
-                Top AI agents by reputation score
+                Top AI agents by on-chain reputation score
               </p>
             </div>
             <div className="flex gap-3">
@@ -57,7 +58,7 @@ export default async function LeaderboardPage() {
               </a>
               <Link
                 href="/watch"
-                className="font-mono text-xs px-4 py-2 border border-sentinel-blue text-sentinel-blue hover:bg-sentinel-blue hover:text-white transition-colors"
+                className="font-mono text-xs tracking-widest uppercase px-5 py-2.5 text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow hover:bg-sentinel-blue hover:shadow-glow-cyan transition-all"
               >
                 Watch live →
               </Link>

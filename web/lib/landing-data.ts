@@ -4,7 +4,8 @@ import { unstable_cache } from 'next/cache';
 import { formatUnits, parseAbiItem } from 'viem';
 import type { Address, Hex } from 'viem';
 import { publicClient } from './chain';
-import { DEPLOYMENTS } from './contracts';
+import { NETWORK, DEPLOY_BLOCK } from './network';
+import { collectLogs } from './logs';
 
 export interface WallEvent {
   type: 'GUARDED' | 'EXEC' | 'CIRCUIT_BREAKER' | 'RESCUED' | 'PAUSED';
@@ -15,8 +16,8 @@ export interface WallEvent {
   meta?: string;
 }
 
-const REGISTRY = DEPLOYMENTS.sepolia.AgentRegistry;
-const GUARD = DEPLOYMENTS.sepolia.SentinelGuard;
+const REGISTRY = NETWORK.AgentRegistry;
+const GUARD = NETWORK.SentinelGuard;
 
 // ── Event ABIs (used only for getLogs, so parseAbiItem is cleaner than importing the full ABI) ──
 const EVT_AGENT_GUARDED = parseAbiItem(
@@ -38,20 +39,7 @@ const EVT_AGENT_PAUSED = parseAbiItem(
   'event AgentPausedByOwner(address indexed agent, uint256 timestamp)',
 );
 
-async function fetchMntPrice(): Promise<number> {
-  try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=mantle&vs_currencies=usd',
-      { next: { revalidate: 60 }, signal: AbortSignal.timeout(3000) },
-    );
-    const data = (await res.json()) as { mantle?: { usd?: number } };
-    return data?.mantle?.usd ?? 0.5;
-  } catch {
-    return 0.5; // fallback price
-  }
-}
-
-const EMPTY = { agentCount: 0, breakerCount: 0, tvlUsd: 0, recentEvents: [] as WallEvent[] };
+const EMPTY = { agentCount: 0, breakerCount: 0, tvlMnt: 0, recentEvents: [] as WallEvent[] };
 
 async function fetchLandingStats() {
   try {
@@ -65,29 +53,26 @@ async function fetchLandingStats() {
     recentBreakerResult,
     recentRescuedResult,
     recentPausedResult,
-    mntPriceResult,
   ] = await Promise.allSettled([
-    publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_DEREGISTERED, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: BigInt(0) }),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_DEREGISTERED, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
     publicClient.getBalance({ address: GUARD }),
-    publicClient.getLogs({ address: GUARD, event: EVT_AGENT_EXECUTED, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: GUARD, event: EVT_FUNDS_RESCUED, fromBlock: BigInt(0) }),
-    publicClient.getLogs({ address: GUARD, event: EVT_AGENT_PAUSED, fromBlock: BigInt(0) }),
-    fetchMntPrice(),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_AGENT_EXECUTED, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_FUNDS_RESCUED, fromBlock: f, toBlock: t })),
+    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_AGENT_PAUSED, fromBlock: f, toBlock: t })),
   ]);
 
   const guarded = guardedResult.status === 'fulfilled' ? guardedResult.value : [];
   const dereg = deregResult.status === 'fulfilled' ? deregResult.value : [];
   const breakers = breakerResult.status === 'fulfilled' ? breakerResult.value : [];
   const nativeBal = nativeBalResult.status === 'fulfilled' ? nativeBalResult.value : BigInt(0);
-  const mntPrice = mntPriceResult.status === 'fulfilled' ? mntPriceResult.value : 0.5;
 
   const agentCount = Math.max(0, guarded.length - dereg.length);
   const breakerCount = breakers.length;
-  const tvlUsd = Math.round(Number(formatUnits(nativeBal, 18)) * mntPrice);
+  const tvlMnt = Number(formatUnits(nativeBal, 18));
 
   // Build recent events array from all log types, newest-first
   type AnyLog = { blockNumber: bigint | null; transactionHash: Hex | null; args: Record<string, unknown> };
@@ -121,7 +106,7 @@ async function fetchLandingStats() {
     return {
       agentCount,
       breakerCount,
-      tvlUsd,
+      tvlMnt,
       recentEvents: allEvents.slice(0, 3),
     };
   } catch {

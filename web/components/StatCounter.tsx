@@ -10,7 +10,14 @@ interface Props {
   suffix?: string;
   decimals?: number;
   className?: string;
+  tone?: 'default' | 'cyan' | 'danger';
 }
+
+const TONE: Record<NonNullable<Props['tone']>, string> = {
+  default: 'text-sentinel-white',
+  cyan: 'text-sentinel-cyan glow-blue',
+  danger: 'text-sentinel-danger',
+};
 
 export function StatCounter({
   value,
@@ -19,13 +26,19 @@ export function StatCounter({
   suffix,
   decimals,
   className,
+  tone = 'default',
 }: Props) {
   return (
     <div className={cn('flex flex-col gap-1', className)}>
-      <span className="font-mono text-[56px] leading-none font-bold text-sentinel-white tabular-nums">
+      <span
+        className={cn(
+          'font-mono text-[44px] md:text-[56px] leading-none font-bold tabular-nums',
+          TONE[tone],
+        )}
+      >
         <CountUp
           end={value}
-          duration={1.5}
+          duration={1.6}
           separator=","
           prefix={prefix}
           suffix={suffix}
@@ -33,7 +46,7 @@ export function StatCounter({
           useEasing
         />
       </span>
-      <span className="font-mono text-xs tracking-widest uppercase text-sentinel-gray-1">
+      <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-sentinel-gray-1">
         {label}
       </span>
     </div>

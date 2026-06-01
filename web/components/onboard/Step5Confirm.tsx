@@ -5,12 +5,12 @@ import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { parseUnits, erc20Abi } from 'viem';
 import type { Address, Hex } from 'viem';
 import {
-  DEPLOYMENTS,
   SafetyRulesAbi,
   SafetyRulesBytecode,
   AgentRegistryAbi,
   SentinelGuardAbi,
 } from '@/lib/contracts';
+import { NETWORK } from '@/lib/network';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ function PhaseRow({ phase, current, label }: { phase: TxPhase; current: TxPhase;
       <span className={cn(
         'font-mono text-xs w-4',
         done && 'text-emerald-400',
-        active && 'text-sentinel-blue',
+        active && 'text-sentinel-cyan glow-blue animate-pulse',
         !done && !active && 'text-sentinel-gray-1',
       )}>
         {done ? '✓' : active ? '●' : '○'}
@@ -106,10 +106,10 @@ export function Step5Confirm() {
       // 3. Register with AgentRegistry
       setPhase('registering');
       const regHash = await walletClient.writeContract({
-        address: DEPLOYMENTS.sepolia.AgentRegistry,
+        address: NETWORK.AgentRegistry,
         abi: AgentRegistryAbi,
         functionName: 'register',
-        args: [BigInt(selectedTokenId), rulesAddress, DEPLOYMENTS.sepolia.SentinelGuard],
+        args: [BigInt(selectedTokenId), rulesAddress, NETWORK.SentinelGuard],
       });
       await publicClient.waitForTransactionReceipt({ hash: regHash });
       store.setRegisteredTx(regHash);
@@ -124,13 +124,13 @@ export function Step5Confirm() {
             address: deposit.token as Address,
             abi: erc20Abi,
             functionName: 'approve',
-            args: [DEPLOYMENTS.sepolia.SentinelGuard, amountWei],
+            args: [NETWORK.SentinelGuard, amountWei],
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
-            address: DEPLOYMENTS.sepolia.SentinelGuard,
+            address: NETWORK.SentinelGuard,
             abi: SentinelGuardAbi,
             functionName: 'depositForAgent',
             args: [selectedAgent, deposit.token as Address, amountWei],
@@ -139,7 +139,7 @@ export function Step5Confirm() {
         } else {
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
-            address: DEPLOYMENTS.sepolia.SentinelGuard,
+            address: NETWORK.SentinelGuard,
             abi: SentinelGuardAbi,
             functionName: 'depositNativeForAgent',
             args: [selectedAgent],
@@ -162,7 +162,7 @@ export function Step5Confirm() {
   return (
     <div className="space-y-6 py-4">
       <div>
-        <h2 className="font-mono font-bold text-lg text-sentinel-white">
+        <h2 className="font-sans font-bold text-xl text-sentinel-white">
           Review and confirm
         </h2>
         <p className="mt-1 text-sm text-sentinel-gray-1">
@@ -171,7 +171,7 @@ export function Step5Confirm() {
       </div>
 
       {/* Summary */}
-      <div className="border border-sentinel-gray-2 p-4 space-y-2 font-mono text-xs">
+      <div className="surface p-4 space-y-2 font-mono text-xs">
         <div className="flex justify-between text-sentinel-gray-1">
           <span>Agent</span>
           <span className="text-sentinel-white truncate max-w-[240px]">{selectedAgent ?? '—'}</span>
@@ -212,8 +212,8 @@ export function Step5Confirm() {
 
       {/* Transaction progress */}
       {phase !== 'idle' && (
-        <div className="border border-sentinel-gray-2 p-4">
-          <p className="font-mono text-xs text-sentinel-gray-1 mb-3">Transactions</p>
+        <div className="surface p-4 scanlines">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-sentinel-gray-1 mb-3">Transactions</p>
           <PhaseRow phase="deploying-rules" current={phase} label="Deploy SafetyRules contract" />
           {rules.allowedProtocols.length > 0 && (
             <PhaseRow phase="setting-protocols" current={phase} label="Set allowed protocols" />
@@ -247,10 +247,10 @@ export function Step5Confirm() {
           onClick={run}
           disabled={running}
           className={cn(
-            'font-mono text-xs px-6 py-2',
-            'border border-sentinel-blue text-sentinel-blue',
-            'hover:bg-sentinel-blue hover:text-white transition-colors',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'font-mono text-xs tracking-widest uppercase px-7 py-2.5 transition-all',
+            'text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow',
+            'hover:bg-sentinel-blue hover:shadow-glow-cyan',
+            'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none',
           )}
         >
           {running ? 'Processing…' : 'Activate Sentinel ▸'}

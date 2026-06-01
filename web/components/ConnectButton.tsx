@@ -3,7 +3,13 @@
 import { ConnectButton as RKConnectButton } from '@rainbow-me/rainbowkit';
 import { cn } from '@/lib/utils';
 
-export function ConnectButton({ className }: { className?: string }) {
+export function ConnectButton({
+  className,
+  variant = 'outline',
+}: {
+  className?: string;
+  variant?: 'outline' | 'primary';
+}) {
   return (
     <RKConnectButton.Custom>
       {({
@@ -34,13 +40,13 @@ export function ConnectButton({ className }: { className?: string }) {
               <button
                 onClick={openConnectModal}
                 className={cn(
-                  'font-mono text-xs tracking-widest uppercase px-4 py-2',
-                  'border border-sentinel-blue text-sentinel-blue',
-                  'hover:bg-sentinel-blue hover:text-sentinel-white',
-                  'transition-colors duration-150',
+                  'font-mono text-xs tracking-widest uppercase transition-all duration-200',
+                  variant === 'primary'
+                    ? 'px-6 py-3 text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow hover:bg-sentinel-blue hover:shadow-glow-cyan'
+                    : 'px-4 py-2 border border-sentinel-blue text-sentinel-blue hover:bg-sentinel-blue hover:text-sentinel-white',
                 )}
               >
-                Connect ▸
+                Connect Wallet ▸
               </button>
             ) : chain.unsupported ? (
               <button

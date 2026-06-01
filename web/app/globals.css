@@ -24,6 +24,11 @@
     --input: 0 0% 15%;
     --ring: 217.2 91.2% 59.8%;
     --radius: 0.25rem;
+
+    /* Elevated Terminal accents */
+    --sentinel-blue: 217 91% 60%;   /* #2563eb-ish */
+    --sentinel-cyan: 189 94% 53%;   /* #22d3ee */
+    --grid-line: 0 0% 100%;         /* white, used at very low alpha */
   }
 }
 
@@ -31,25 +36,146 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-sentinel-black text-sentinel-white;
     font-family: var(--font-inter, 'Inter', system-ui, sans-serif);
-    font-feature-settings: 'ss01', 'ss03';
+    font-feature-settings: 'ss01', 'ss03', 'cv01', 'tnum';
+    position: relative;
+    min-height: 100vh;
   }
-  .font-mono,
-  [class*="font-mono"] {
-    font-family: var(--font-mono, 'JetBrains Mono', 'IBM Plex Mono', monospace);
+
+  /* ── Layer 1: blueprint grid backdrop (fixed, behind everything) ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, hsl(var(--grid-line) / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--grid-line) / 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 78%);
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 78%);
+  }
+
+  /* ── Layer 2: ambient color glow near the top of the page ── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -22vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130vw;
+    height: 70vh;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(50% 50% at 50% 50%, hsl(var(--sentinel-blue) / 0.16), transparent 70%),
+      radial-gradient(40% 40% at 62% 35%, hsl(var(--sentinel-cyan) / 0.08), transparent 70%);
+    filter: blur(8px);
+  }
+
+  /* Keep real content above the backdrop layers */
+  body > * {
+    position: relative;
+    z-index: 1;
   }
 }
 
 /* Scrollbar — subtle, dark */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #262626; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #404040; }
 
 /* Focus ring */
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid hsl(var(--sentinel-blue));
   outline-offset: 2px;
+}
+
+@layer components {
+  /* Glassy elevated surface used for cards/panels */
+  .surface {
+    @apply relative border border-sentinel-gray-2 bg-white/[0.02] backdrop-blur-sm;
+    box-shadow: inset 0 1px 0 0 hsl(var(--grid-line) / 0.04);
+  }
+  .surface-hover {
+    @apply transition-all duration-200;
+  }
+  .surface-hover:hover {
+    @apply border-sentinel-blue/40 bg-white/[0.035];
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--grid-line) / 0.06),
+      0 0 0 1px hsl(var(--sentinel-blue) / 0.08),
+      0 8px 30px -12px hsl(var(--sentinel-blue) / 0.25);
+  }
+
+  /* Section eyebrow label */
+  .eyebrow {
+    @apply font-mono text-[11px] tracking-[0.2em] uppercase text-sentinel-gray-1;
+  }
+}
+
+@layer utilities {
+  /* Gradient text (blue → cyan) for hero emphasis */
+  .text-gradient {
+    background-image: linear-gradient(
+      100deg,
+      hsl(var(--sentinel-blue)) 0%,
+      hsl(var(--sentinel-cyan)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Neon text/box glows */
+  .glow-blue {
+    text-shadow: 0 0 16px hsl(var(--sentinel-blue) / 0.55);
+  }
+  .glow-box-blue {
+    box-shadow: 0 0 0 1px hsl(var(--sentinel-blue) / 0.25),
+      0 0 24px -4px hsl(var(--sentinel-blue) / 0.45);
+  }
+  .glow-box-danger {
+    box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.4),
+      0 0 28px -2px hsl(var(--destructive) / 0.55);
+  }
+
+  /* Hairline gradient divider */
+  .rule-x {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--grid-line) / 0.12) 20%,
+      hsl(var(--grid-line) / 0.12) 80%,
+      transparent
+    );
+  }
+
+  /* Animated scanline sweep overlay (for the live panel) */
+  .scanlines {
+    position: relative;
+  }
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      hsl(var(--sentinel-cyan) / 0.04) 50%,
+      transparent 100%
+    );
+    background-size: 100% 8px;
+    opacity: 0.5;
+    mix-blend-mode: screen;
+  }
 }

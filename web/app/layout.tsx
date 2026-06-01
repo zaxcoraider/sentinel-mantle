@@ -16,14 +16,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SENTINEL — Agent Circuit Breaker',
+  title: 'SENTINEL Agent Circuit Breaker',
   description:
     'The circuit breaker for autonomous AI agents on Mantle Network. Wrap your ERC-8004 agent. Sleep at night.',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinel.guard',
   ),
   openGraph: {
-    title: 'SENTINEL — Agent Circuit Breaker',
+    title: 'SENTINEL Agent Circuit Breaker',
     description:
       'The circuit breaker for autonomous AI agents on Mantle Network.',
     type: 'website',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SENTINEL — Agent Circuit Breaker',
+    title: 'SENTINEL Agent Circuit Breaker',
     description:
       'The circuit breaker for autonomous AI agents on Mantle Network.',
     images: ['/api/og'],

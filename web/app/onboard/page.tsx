@@ -36,7 +36,8 @@ export default function OnboardPage() {
       <main className="pt-14 min-h-screen">
         <div className="max-w-2xl mx-auto px-4 md:px-6 py-10">
           <div className="mb-8">
-            <h1 className="font-mono font-bold text-xl text-sentinel-white tracking-wide">
+            <span className="eyebrow">Onboarding</span>
+            <h1 className="font-sans font-bold text-3xl text-sentinel-white tracking-tight mt-1">
               Wrap your agent
             </h1>
             <p className="font-mono text-xs text-sentinel-gray-1 mt-1">

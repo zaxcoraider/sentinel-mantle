@@ -5,16 +5,17 @@ import { unstable_cache } from 'next/cache';
 import { getAddress, type Address } from 'viem';
 import { publicClient } from './chain';
 import {
-  DEPLOYMENTS,
   NATIVE_TOKEN,
   AgentRegistryAbi,
   SentinelGuardAbi,
   SafetyRulesAbi,
   ReputationOracleAbi,
-  MockIdentityRegistryAbi,
+  AgentIdentityRegistryAbi,
 } from './contracts';
+import { NETWORK, DEPLOY_BLOCK } from './network';
+import { collectLogs } from './logs';
 
-const SEP = DEPLOYMENTS.sepolia;
+const SEP = NETWORK;
 
 // ---- Types -----------------------------------------------------------------
 
@@ -91,8 +92,8 @@ const resolveUri = (uri: string): string => {
 const fetchMetadata = async (tokenId: bigint): Promise<AgentMetadata | null> => {
   try {
     const uri = (await publicClient.readContract({
-      address: SEP.MockIdentityRegistry,
-      abi: MockIdentityRegistryAbi,
+      address: SEP.AgentIdentityRegistry,
+      abi: AgentIdentityRegistryAbi,
       functionName: 'tokenURI',
       args: [tokenId],
     })) as string;
@@ -286,21 +287,19 @@ export const getAgentDetail = unstable_cache(
 const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   try {
     // Get all AgentGuarded events to find all registered agents
-    const logs = await publicClient.getLogs({
-      address: SEP.AgentRegistry,
-      event: {
-        type: 'event',
-        name: 'AgentGuarded',
-        inputs: [
-          { name: 'agent', type: 'address', indexed: true },
-          { name: 'tokenId', type: 'uint256', indexed: true },
-          { name: 'rulesContract', type: 'address', indexed: false },
-          { name: 'guardContract', type: 'address', indexed: false },
-        ],
-      },
-      fromBlock: BigInt(0),
-      toBlock: 'latest',
-    });
+    const AGENT_GUARDED = {
+      type: 'event',
+      name: 'AgentGuarded',
+      inputs: [
+        { name: 'agent', type: 'address', indexed: true },
+        { name: 'tokenId', type: 'uint256', indexed: true },
+        { name: 'rulesContract', type: 'address', indexed: false },
+        { name: 'guardContract', type: 'address', indexed: false },
+      ],
+    } as const;
+    const logs = await collectLogs(publicClient, DEPLOY_BLOCK, (f, t) =>
+      publicClient.getLogs({ address: SEP.AgentRegistry, event: AGENT_GUARDED, fromBlock: f, toBlock: t }),
+    );
 
     // Deduplicate (re-registrations possible)
     const agents = [...new Set(logs.map((l) => getAddress(l.args.agent as string)))];

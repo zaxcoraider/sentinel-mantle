@@ -16,7 +16,7 @@ import {
   type Account,
 } from 'viem';
 import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
-import { mantleSepoliaTestnet } from 'viem/chains';
+import { mantle, mantleSepoliaTestnet } from 'viem/chains';
 import chalk from 'chalk';
 import boxen from 'boxen';
 
@@ -27,8 +27,27 @@ export const ROOT = resolve(__dirname, '..');
 export const KEYS_PATH = resolve(ROOT, '.agent-keys.json');
 export const CONFIG_PATH = resolve(ROOT, 'agent-config.json');
 
-// ── Deployed Sepolia addresses (mirrors contracts/deployments/sepolia.json) ──
-export const DEPLOYMENTS = {
+// ── Network selection ─────────────────────────────────────────────────────
+// DEMO_NETWORK=mainnet (default) | sepolia. Drives chain, RPC, and which
+// deployed suite the demo agents act on.
+const NET = (process.env.DEMO_NETWORK ?? 'mainnet').toLowerCase();
+export const IS_MAINNET = NET !== 'sepolia';
+export const CHAIN = IS_MAINNET ? mantle : mantleSepoliaTestnet;
+export const CHAIN_ID = CHAIN.id;
+export const NETWORK_NAME = IS_MAINNET ? 'mantle-mainnet' : 'mantle-sepolia';
+
+// Deployed suites. NOTE: the identity registry key stays `MockIdentityRegistry`
+// for code compatibility, but on mainnet it points at AgentIdentityRegistry
+// (identical ABI, "Mock" dropped — see contracts/deployments/mainnet.json).
+const MAINNET_DEPLOYMENTS = {
+  ReputationOracle: '0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f' as Address,
+  EmergencyVault: '0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5' as Address,
+  AgentRegistry: '0x5c570A7C3De89bd4E27df65D6aFafD66DF549356' as Address,
+  SentinelGuard: '0x929EC63c07A0d34358DF34ac073F2bf6eCF22642' as Address,
+  MockIdentityRegistry: '0xbbb129508fdCCB59334432c5C3d6b4251be8CA91' as Address,
+} as const;
+
+const SEPOLIA_DEPLOYMENTS = {
   ReputationOracle: '0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC' as Address,
   EmergencyVault: '0x418BA815CeaE1f4D3CE06E0190b6546647DD9865' as Address,
   AgentRegistry: '0xF09f811397cbd9dE54a8505f22D4A276A2ED5c41' as Address,
@@ -36,15 +55,18 @@ export const DEPLOYMENTS = {
   MockIdentityRegistry: '0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432' as Address,
 } as const;
 
+export const DEPLOYMENTS = IS_MAINNET ? MAINNET_DEPLOYMENTS : SEPOLIA_DEPLOYMENTS;
+
 export const NATIVE_TOKEN = '0x0000000000000000000000000000000000000000' as Address;
 
 // ── viem clients ────────────────────────────────────────────────────────────
 
-export const RPC_URL =
-  process.env.MANTLE_SEPOLIA_RPC_URL ?? 'https://rpc.sepolia.mantle.xyz';
+export const RPC_URL = IS_MAINNET
+  ? process.env.MANTLE_RPC_URL ?? 'https://rpc.mantle.xyz'
+  : process.env.MANTLE_SEPOLIA_RPC_URL ?? 'https://rpc.sepolia.mantle.xyz';
 
 export const publicClient: PublicClient = createPublicClient({
-  chain: mantleSepoliaTestnet,
+  chain: CHAIN,
   transport: http(RPC_URL),
 });
 
@@ -52,7 +74,7 @@ export const walletFromKey = (key: Hex): { account: Account; client: WalletClien
   const account = privateKeyToAccount(key);
   const client = createWalletClient({
     account,
-    chain: mantleSepoliaTestnet,
+    chain: CHAIN,
     transport: http(RPC_URL),
   });
   return { account, client };
@@ -118,8 +140,8 @@ export interface AgentRecord {
 }
 
 export interface AgentConfig {
-  network: 'mantle-sepolia';
-  chainId: 5003;
+  network: string;
+  chainId: number;
   setupAt: number;
   yieldchaser: AgentRecord;
   protocolhopper: AgentRecord;
@@ -150,7 +172,7 @@ export const banner = (name: AgentName, address: Address): string =>
     [
       PALETTE[name].bold(name.toUpperCase()),
       chalk.gray(address),
-      chalk.gray(`mantle sepolia · ${new Date().toISOString()}`),
+      chalk.gray(`${NETWORK_NAME} · ${new Date().toISOString()}`),
     ].join('\n'),
     {
       padding: 1,

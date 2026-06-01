@@ -2153,7 +2153,7 @@ export const EmergencyVaultAbi = [
   }
 ] as const;
 
-export const MockIdentityRegistryAbi = [
+export const AgentIdentityRegistryAbi = [
   {
     "type": "constructor",
     "inputs": [],
@@ -2655,8 +2655,17 @@ export const DEPLOYMENTS = {
     SentinelGuard: '0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7' as Address,
     ReputationOracle: '0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC' as Address,
     EmergencyVault: '0x418BA815CeaE1f4D3CE06E0190b6546647DD9865' as Address,
-    MockIdentityRegistry: '0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432' as Address,
+    AgentIdentityRegistry: '0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432' as Address,
     explorerBase: 'https://explorer.sepolia.mantle.xyz',
+  },
+  mainnet: {
+    chainId: 5000 as const,
+    AgentRegistry: '0x5c570A7C3De89bd4E27df65D6aFafD66DF549356' as Address,
+    SentinelGuard: '0x929EC63c07A0d34358DF34ac073F2bf6eCF22642' as Address,
+    ReputationOracle: '0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f' as Address,
+    EmergencyVault: '0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5' as Address,
+    AgentIdentityRegistry: '0xbbb129508fdCCB59334432c5C3d6b4251be8CA91' as Address,
+    explorerBase: 'https://mantlescan.xyz',
   },
 } as const;
 

@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useOnboardStore } from '@/lib/store/onboard-store';
-import { DEPLOYMENTS } from '@/lib/contracts';
+import { EXPLORER_BASE } from '@/lib/network';
 
 export function Step6Success() {
   const store = useOnboardStore();
   const { selectedAgent, registeredTxHash, deployedRulesAddress } = store;
 
-  const explorerBase = DEPLOYMENTS.sepolia.explorerBase;
+  const explorerBase = EXPLORER_BASE;
   const agentUrl = selectedAgent ? `/agent/${selectedAgent}` : '/dashboard';
 
   const tweetText = encodeURIComponent(
@@ -17,20 +17,25 @@ export function Step6Success() {
 
   return (
     <div className="space-y-6 py-4">
-      <div className="border-l-2 border-emerald-400 pl-4">
-        <p className="font-mono text-xs text-emerald-400 tracking-widest uppercase mb-1">
-          Agent guarded
-        </p>
-        <h2 className="font-mono font-bold text-xl text-sentinel-white">
+      <div className="surface p-6 space-y-3" style={{ boxShadow: '0 0 30px -8px rgba(52,211,153,0.35)' }}>
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/50 bg-emerald-400/10 text-emerald-400 text-lg">
+            ✓
+          </span>
+          <p className="font-mono text-[11px] text-emerald-400 tracking-[0.2em] uppercase">
+            Agent guarded
+          </p>
+        </div>
+        <h2 className="font-sans font-bold text-2xl text-sentinel-white tracking-tight">
           Sentinel is watching.
         </h2>
-        <p className="mt-1 text-sm text-sentinel-gray-1">
+        <p className="text-sm text-sentinel-gray-1 leading-relaxed">
           Your agent is now protected. The monitor will pause it before any rule
           violation compounds.
         </p>
       </div>
 
-      <div className="border border-sentinel-gray-2 p-4 font-mono text-xs space-y-2">
+      <div className="surface p-4 font-mono text-xs space-y-2">
         <div className="flex justify-between text-sentinel-gray-1">
           <span>Agent address</span>
           <span className="text-sentinel-white truncate max-w-[240px]">{selectedAgent ?? '—'}</span>
@@ -66,7 +71,7 @@ export function Step6Success() {
       <div className="flex flex-col sm:flex-row gap-3">
         <Link
           href={agentUrl}
-          className="flex-1 text-center font-mono text-xs px-6 py-3 border border-sentinel-blue text-sentinel-blue hover:bg-sentinel-blue hover:text-white transition-colors"
+          className="flex-1 text-center font-mono text-xs tracking-widest uppercase px-6 py-3 text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow hover:bg-sentinel-blue hover:shadow-glow-cyan transition-all"
         >
           View agent dashboard →
         </Link>

@@ -17,6 +17,8 @@ import {
   loadOrCreateKeys,
   saveConfig,
   AGENT_NAMES,
+  NETWORK_NAME,
+  CHAIN_ID,
   type AgentName,
   type AgentConfig,
   type AgentRecord,
@@ -30,8 +32,8 @@ import {
 import { SafetyRulesBytecode, SafetyRulesConstructorAbi } from './bytecode.js';
 import chalk from 'chalk';
 
-const GAS_BUDGET = parseEther('0.005');           // each agent EOA's gas float
-const GUARD_DEPOSIT = parseEther('0.005');        // each agent's bankroll inside the guard
+const GAS_BUDGET = parseEther(process.env.GAS_BUDGET_MNT ?? '0.005');        // each agent EOA's gas float
+const GUARD_DEPOSIT = parseEther(process.env.GUARD_DEPOSIT_MNT ?? '0.005');  // each agent's bankroll inside the guard
 const MIN_AGENT_BALANCE = parseEther('0.002');    // top-up threshold
 
 interface RulesProfile {
@@ -237,7 +239,7 @@ const main = async (): Promise<void> => {
   const deployerBalance = await publicClient.getBalance({ address: deployer.address });
   info(`Deployer balance ${(Number(deployerBalance) / 1e18).toFixed(4)} MNT`);
   if (deployerBalance < parseEther('0.05')) {
-    throw new Error('Deployer needs at least 0.05 MNT on Mantle Sepolia');
+    throw new Error(`Deployer needs at least 0.05 MNT on ${NETWORK_NAME}`);
   }
 
   const keys = loadOrCreateKeys();
@@ -314,8 +316,8 @@ const main = async (): Promise<void> => {
   }
 
   const config: AgentConfig = {
-    network: 'mantle-sepolia',
-    chainId: 5003,
+    network: NETWORK_NAME,
+    chainId: CHAIN_ID,
     setupAt: Math.floor(Date.now() / 1000),
     yieldchaser: records.yieldchaser!,
     protocolhopper: records.protocolhopper!,

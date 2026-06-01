@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useOnboardStore, type SafetyRulesForm } from '@/lib/store/onboard-store';
-import { cn } from '@/lib/utils';
 
 const COMMON_PROTOCOLS = [
   { label: 'Merchant Moe', address: '0x0000000000000000000000000000000000000001' },
@@ -79,15 +78,15 @@ export function Step3Rules() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
       <div>
-        <h2 className="font-mono font-bold text-lg text-sentinel-white">
+        <h2 className="font-sans font-bold text-xl text-sentinel-white">
           Configure safety rules
         </h2>
         <p className="mt-1 text-sm text-sentinel-gray-1">
-          These rules are deployed on-chain as your agent's SafetyRules contract.
+          These rules are deployed on-chain as your agent&apos;s SafetyRules contract.
         </p>
       </div>
 
-      <div className="border border-sentinel-gray-2 px-4">
+      <div className="surface px-4">
         <RuleField
           label="Max drawdown"
           helper="Pause if value drops by more than this %"
@@ -214,11 +213,7 @@ export function Step3Rules() {
         </button>
         <button
           type="submit"
-          className={cn(
-            'font-mono text-xs px-6 py-2',
-            'border border-sentinel-blue text-sentinel-blue',
-            'hover:bg-sentinel-blue hover:text-white transition-colors',
-          )}
+          className="font-mono text-xs tracking-widest uppercase px-6 py-2.5 text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow hover:bg-sentinel-blue hover:shadow-glow-cyan transition-all"
         >
           Continue →
         </button>

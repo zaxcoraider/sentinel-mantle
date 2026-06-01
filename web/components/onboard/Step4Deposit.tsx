@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useOnboardStore, type DepositForm } from '@/lib/store/onboard-store';
-import { cn } from '@/lib/utils';
 
 const TOKENS = [
   { id: 'NATIVE', label: 'MNT (native)', decimals: 18 },
@@ -44,7 +43,7 @@ export function Step4Deposit() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
       <div>
-        <h2 className="font-mono font-bold text-lg text-sentinel-white">
+        <h2 className="font-sans font-bold text-xl text-sentinel-white">
           Deposit funds
         </h2>
         <p className="mt-1 text-sm text-sentinel-gray-1">
@@ -53,7 +52,7 @@ export function Step4Deposit() {
         </p>
       </div>
 
-      <div className="border border-sentinel-gray-2 p-4 space-y-4">
+      <div className="surface p-4 space-y-4">
         <div>
           <label className="font-mono text-xs text-sentinel-gray-1 block mb-2">Token</label>
           <select
@@ -105,11 +104,7 @@ export function Step4Deposit() {
         </button>
         <button
           type="submit"
-          className={cn(
-            'font-mono text-xs px-6 py-2',
-            'border border-sentinel-blue text-sentinel-blue',
-            'hover:bg-sentinel-blue hover:text-white transition-colors',
-          )}
+          className="font-mono text-xs tracking-widest uppercase px-6 py-2.5 text-sentinel-white bg-sentinel-blue/90 border border-sentinel-blue shadow-glow hover:bg-sentinel-blue hover:shadow-glow-cyan transition-all"
         >
           Continue →
         </button>

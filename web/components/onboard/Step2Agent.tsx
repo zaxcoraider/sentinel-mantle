@@ -4,7 +4,9 @@ import { useAccount, usePublicClient, useWriteContract, useWaitForTransactionRec
 import { useEffect, useState } from 'react';
 import type { Address } from 'viem';
 import { parseAbiItem } from 'viem';
-import { DEPLOYMENTS, MockIdentityRegistryAbi } from '@/lib/contracts';
+import { AgentIdentityRegistryAbi } from '@/lib/contracts';
+import { NETWORK, DEPLOY_BLOCK } from '@/lib/network';
+import { collectLogs } from '@/lib/logs';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
 import { AddressLink } from '@/components/AddressLink';
@@ -35,27 +37,28 @@ export function Step2Agent() {
     setLoading(true);
     setError('');
 
-    const REGISTRY = DEPLOYMENTS.sepolia.MockIdentityRegistry;
+    const REGISTRY = NETWORK.AgentIdentityRegistry;
     const EVT_TRANSFER = parseAbiItem(
       'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)',
     );
 
-    client
-      .getLogs({ address: REGISTRY, event: EVT_TRANSFER, args: { to: address }, fromBlock: BigInt(0) })
+    collectLogs(client, DEPLOY_BLOCK, (f, t) =>
+      client.getLogs({ address: REGISTRY, event: EVT_TRANSFER, args: { to: address }, fromBlock: f, toBlock: t }),
+    )
       .then(async (logs) => {
         const candidates = logs.map((l) => l.args.tokenId as bigint);
         const settled = await Promise.allSettled(
           candidates.map(async (tokenId) => {
             const owner = await client.readContract({
               address: REGISTRY,
-              abi: MockIdentityRegistryAbi,
+              abi: AgentIdentityRegistryAbi,
               functionName: 'ownerOf',
               args: [tokenId],
             });
             if ((owner as string).toLowerCase() !== address.toLowerCase()) return null;
             const [agentAddress, registrationURI] = (await client.readContract({
               address: REGISTRY,
-              abi: MockIdentityRegistryAbi,
+              abi: AgentIdentityRegistryAbi,
               functionName: 'getAgent',
               args: [tokenId],
             })) as [Address, string];
@@ -86,8 +89,8 @@ export function Step2Agent() {
     setMintError('');
     mint(
       {
-        address: DEPLOYMENTS.sepolia.MockIdentityRegistry,
-        abi: MockIdentityRegistryAbi,
+        address: NETWORK.AgentIdentityRegistry,
+        abi: AgentIdentityRegistryAbi,
         functionName: 'mint',
         args: [address, trimmed, uriInput || 'ipfs://mock'],
       },
@@ -98,7 +101,7 @@ export function Step2Agent() {
   return (
     <div className="space-y-6 py-4">
       <div>
-        <h2 className="font-mono font-bold text-lg text-sentinel-white">
+        <h2 className="font-sans font-bold text-xl text-sentinel-white">
           Select your ERC-8004 agent
         </h2>
         <p className="mt-1 text-sm text-sentinel-gray-1">
@@ -124,18 +127,18 @@ export function Step2Agent() {
             <li key={t.tokenId.toString()}>
               <button
                 onClick={() => handleSelect(t)}
-                className="w-full text-left border border-sentinel-gray-2 hover:border-sentinel-blue p-4 transition-colors"
+                className="surface surface-hover w-full text-left p-4 group"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-mono text-xs text-sentinel-gray-1">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-sentinel-gray-1">
                       Token #{t.tokenId.toString()}
                     </p>
-                    <p className="font-mono text-sm text-sentinel-white mt-0.5">
+                    <p className="font-mono text-sm text-sentinel-white mt-1">
                       Agent: <AddressLink address={t.agentAddress} className="text-sentinel-white" />
                     </p>
                   </div>
-                  <span className="font-mono text-xs text-sentinel-blue">Select →</span>
+                  <span className="font-mono text-xs text-sentinel-cyan group-hover:translate-x-1 transition-transform">Select →</span>
                 </div>
               </button>
             </li>
@@ -144,8 +147,8 @@ export function Step2Agent() {
       )}
 
       {/* Mint a test identity on Sepolia */}
-      <details className="border border-sentinel-gray-2 p-4">
-        <summary className="font-mono text-xs text-sentinel-gray-1 cursor-pointer">
+      <details className="surface p-4">
+        <summary className="font-mono text-xs text-sentinel-gray-1 cursor-pointer hover:text-sentinel-white transition-colors">
           + Mint a testnet identity
         </summary>
         <div className="mt-3 space-y-3">

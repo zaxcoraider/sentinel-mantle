@@ -7,10 +7,11 @@ import { HeroCounters } from '@/components/HeroCounters';
 import { EventRow } from '@/components/EventRow';
 import { ConnectButton } from '@/components/ConnectButton';
 import { ConnectRedirect } from '@/components/ConnectRedirect';
+import { BreakerVisual } from '@/components/BreakerVisual';
 import { getLandingData } from '@/lib/landing-data';
 
 export const metadata: Metadata = {
-  title: 'SENTINEL — The circuit breaker for autonomous AI agents',
+  title: 'SENTINEL · The circuit breaker for autonomous AI agents',
   description:
     'Wrap your ERC-8004 agent. Set safety rules. Sleep at night. Sentinel monitors your agent on Mantle and pauses it before damage compounds.',
 };
@@ -24,7 +25,7 @@ async function LandingStats() {
     <>
       <HeroCounters
         agentCount={data.agentCount}
-        tvlUsd={data.tvlUsd}
+        tvlMnt={data.tvlMnt}
         breakerCount={data.breakerCount}
       />
       <WatchPanel events={data.recentEvents} />
@@ -118,33 +119,46 @@ export default function LandingPage() {
       <Nav />
       <ConnectRedirect />
 
-      <main className="pt-14 max-w-4xl mx-auto px-4 md:px-6">
+      <main className="pt-14 max-w-6xl mx-auto px-4 md:px-6">
         {/* ── Hero ───────────────────────────────────────────────────────── */}
-        <section className="pt-16 md:pt-20 pb-4">
-          <h1 className="font-sans text-[clamp(40px,6vw,72px)] font-bold leading-tight tracking-tight text-sentinel-white">
-            The circuit breaker for
-            <br />
-            autonomous AI agents.
-          </h1>
-          <p className="mt-4 font-mono text-base md:text-lg text-sentinel-gray-1 max-w-xl">
-            Wrap your ERC-8004 agent. Sleep at night.
-          </p>
+        <section className="pt-14 md:pt-20 pb-4 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+          <div className="animate-fade-up">
+            <span className="eyebrow inline-flex items-center gap-2 border border-sentinel-gray-2 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-sentinel-cyan animate-glow-pulse" />
+              Live on Mantle Mainnet
+            </span>
+            <h1 className="mt-5 font-sans text-[clamp(38px,5.5vw,68px)] font-bold leading-[1.04] tracking-tight text-sentinel-white">
+              The circuit breaker for{' '}
+              <span className="text-gradient">autonomous AI agents.</span>
+            </h1>
+            <p className="mt-5 font-mono text-sm md:text-base text-sentinel-gray-1 max-w-md leading-relaxed">
+              Wrap your ERC-8004 agent, set safety rules, and let Sentinel pause it
+              and rescue funds before a bad trade compounds. Sleep at night.
+            </p>
 
-          <div className="mt-8 flex items-center gap-4 flex-wrap">
-            <ConnectButton className="inline-flex" />
-            <Link
-              href="/watch"
-              className="font-mono text-xs text-sentinel-gray-1 hover:text-sentinel-white transition-colors"
-            >
-              View the live wall →
-            </Link>
+            <div className="mt-8 flex items-center gap-5 flex-wrap">
+              <ConnectButton className="inline-flex" variant="primary" />
+              <Link
+                href="/watch"
+                className="group font-mono text-xs text-sentinel-gray-1 hover:text-sentinel-white transition-colors"
+              >
+                View the live wall{' '}
+                <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex justify-center lg:justify-end animate-fade-up [animation-delay:120ms]">
+            <BreakerVisual />
           </div>
         </section>
 
         {/* ── Live stats + Watch panel ────────────────────────────────── */}
-        <Suspense fallback={<StatsSkeleton />}>
-          <LandingStats />
-        </Suspense>
+        <div className="mt-12 md:mt-16">
+          <Suspense fallback={<StatsSkeleton />}>
+            <LandingStats />
+          </Suspense>
+        </div>
 
         {/* ── How it works ────────────────────────────────────────────── */}
         <section className="mt-20">

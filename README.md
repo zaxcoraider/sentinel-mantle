@@ -41,6 +41,24 @@ See [`docs/CONTRACT_ARCHITECTURE.md`](docs/CONTRACT_ARCHITECTURE.md) and [`monit
 
 Sentinel is built *for* the agentic economy Mantle is enabling. It speaks **ERC-8004** agent identity natively, guards Mantle's **RWA-native assets** (mETH, USDY, USDe) — accounting for mETH's rebasing yield so growth isn't flagged as drawdown — and relies on cheap **EigenDA** calldata to make per-tx on-chain rule checks economical. Gas is **MNT**, and the frontend accounts for Mantle's L1 data-fee component. It's a safety layer that only makes sense where autonomous agents actually manage real value: Mantle.
 
+## Built for Mantle's agent-first economy (RealClaw / Byreal Skills)
+
+Byreal's [RealClaw](https://www.byreal.io/en/realclaw/mantle) brings autonomous DeFi agents to Mantle — Stablecoin Farm, DCA, Copy Farm, and aggressive Swap strategies, with **Safe / Balanced / Aggressive** risk tiers and stop-losses. That's exactly the class of agent Sentinel exists to protect.
+
+Sentinel generalizes RealClaw's per-strategy guardrails into **enforceable, on-chain circuit breakers**:
+
+| RealClaw / Byreal Skill concept | Sentinel SafetyRule |
+|---|---|
+| Stop-loss threshold | `maxDrawdownBps` |
+| Risk tier (Safe / Balanced / Aggressive) | a SafetyRules profile (tighter → looser limits) |
+| Strategy scope (which protocols a skill touches) | protocol **allowlist** |
+| Rate / size of automated actions | `maxTxPerHour`, `dailyVolumeCapUsd` |
+| Depeg / oracle monitoring | `oracleDeviationBps` |
+
+A RealClaw-style agent points its operating capital at a `SentinelGuard`, encodes its risk tier as SafetyRules, and gets an automatic **pause + fund rescue** the moment it breaches them — non-custodially, with funds recoverable only by the owner. RealClaw shows the demand for autonomous agents on Mantle; **Sentinel is the kill switch.**
+
+> Scope note: this is a complementary safety layer, not a fork of Byreal. RealClaw is non-custodial (Privy split-key) and ships no public agent SDK today, so Sentinel guards agents of this *class* rather than calling a Byreal API.
+
 ## Status
 
 | Phase | Status |

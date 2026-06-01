@@ -3,8 +3,8 @@
 import { unstable_cache } from 'next/cache';
 import { formatUnits, parseAbiItem } from 'viem';
 import type { Address, Hex } from 'viem';
-import { publicClient } from './chain';
-import { NETWORK, DEPLOY_BLOCK } from './network';
+import { publicClientFor } from './chain';
+import { NETWORKS, DEFAULT_NET, type NetKey } from './networks';
 import { collectLogs } from './logs';
 
 export interface WallEvent {
@@ -15,9 +15,6 @@ export interface WallEvent {
   label: string;
   meta?: string;
 }
-
-const REGISTRY = NETWORK.AgentRegistry;
-const GUARD = NETWORK.SentinelGuard;
 
 // ── Event ABIs (used only for getLogs, so parseAbiItem is cleaner than importing the full ABI) ──
 const EVT_AGENT_GUARDED = parseAbiItem(
@@ -41,8 +38,14 @@ const EVT_AGENT_PAUSED = parseAbiItem(
 
 const EMPTY = { agentCount: 0, breakerCount: 0, tvlMnt: 0, recentEvents: [] as WallEvent[] };
 
-async function fetchLandingStats() {
+async function fetchLandingStats(net: NetKey) {
   try {
+  const cfg = NETWORKS[net];
+  const client = publicClientFor(net);
+  const REGISTRY = cfg.deployments.AgentRegistry;
+  const GUARD = cfg.deployments.SentinelGuard;
+  const DEPLOY_BLOCK = cfg.deployBlock;
+
   const [
     guardedResult,
     deregResult,
@@ -54,15 +57,15 @@ async function fetchLandingStats() {
     recentRescuedResult,
     recentPausedResult,
   ] = await Promise.allSettled([
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_DEREGISTERED, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
-    publicClient.getBalance({ address: GUARD }),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_AGENT_EXECUTED, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_FUNDS_RESCUED, fromBlock: f, toBlock: t })),
-    collectLogs(publicClient, DEPLOY_BLOCK, (f, t) => publicClient.getLogs({ address: GUARD, event: EVT_AGENT_PAUSED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: REGISTRY, event: EVT_AGENT_DEREGISTERED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
+    client.getBalance({ address: GUARD }),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: GUARD, event: EVT_AGENT_EXECUTED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: REGISTRY, event: EVT_AGENT_GUARDED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: GUARD, event: EVT_CIRCUIT_BREAKER, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: GUARD, event: EVT_FUNDS_RESCUED, fromBlock: f, toBlock: t })),
+    collectLogs(client, DEPLOY_BLOCK, (f, t) => client.getLogs({ address: GUARD, event: EVT_AGENT_PAUSED, fromBlock: f, toBlock: t })),
   ]);
 
   const guarded = guardedResult.status === 'fulfilled' ? guardedResult.value : [];
@@ -114,6 +117,7 @@ async function fetchLandingStats() {
   }
 }
 
-export const getLandingData = unstable_cache(fetchLandingStats, ['landing-stats'], {
-  revalidate: 30,
-});
+export const getLandingData = (net: NetKey = DEFAULT_NET) =>
+  unstable_cache(() => fetchLandingStats(net), ['landing-stats', net], {
+    revalidate: 30,
+  })();

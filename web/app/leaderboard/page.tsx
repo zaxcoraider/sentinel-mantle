@@ -4,8 +4,10 @@ import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable';
 import { getLeaderboard } from '@/lib/agent-data';
+import { getServerNet } from '@/lib/server-net';
+import { NETWORKS } from '@/lib/networks';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Sentinel Leaderboard · Top Guarded Agents on Mantle',
@@ -22,7 +24,9 @@ export const metadata: Metadata = {
 };
 
 export default async function LeaderboardPage() {
-  const entries = await getLeaderboard();
+  const net = getServerNet();
+  const entries = await getLeaderboard(net);
+  const networkLabel = NETWORKS[net].label;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://agentsentinel.vercel.app';
   const shareUrl = encodeURIComponent(`${appUrl}/leaderboard`);
@@ -65,7 +69,7 @@ export default async function LeaderboardPage() {
             </div>
           </div>
 
-          <LeaderboardTable entries={entries} />
+          <LeaderboardTable entries={entries} networkLabel={networkLabel} />
 
         </div>
       </main>

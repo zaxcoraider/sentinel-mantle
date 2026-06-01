@@ -9,6 +9,7 @@ import { ConnectButton } from '@/components/ConnectButton';
 import { ConnectRedirect } from '@/components/ConnectRedirect';
 import { BreakerVisual } from '@/components/BreakerVisual';
 import { getLandingData } from '@/lib/landing-data';
+import { getServerNet } from '@/lib/server-net';
 
 export const metadata: Metadata = {
   title: 'SENTINEL · The circuit breaker for autonomous AI agents',
@@ -16,11 +17,11 @@ export const metadata: Metadata = {
     'Wrap your ERC-8004 agent. Set safety rules. Sleep at night. Sentinel monitors your agent on Mantle and pauses it before damage compounds.',
 };
 
-// ISR: re-fetch chain data every 30 seconds
-export const revalidate = 30;
+// Dynamic: data depends on the visitor's selected network (cookie).
+export const dynamic = 'force-dynamic';
 
 async function LandingStats() {
-  const data = await getLandingData();
+  const data = await getLandingData(getServerNet());
   return (
     <>
       <HeroCounters

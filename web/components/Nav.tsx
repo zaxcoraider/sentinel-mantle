@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton } from './ConnectButton';
+import { NetworkToggle } from './NetworkToggle';
 
 interface Props {
   hideLinks?: boolean;
@@ -47,7 +48,10 @@ export function Nav({ hideLinks }: Props) {
           </nav>
         )}
 
-        <ConnectButton />
+        <div className="flex items-center gap-3">
+          <NetworkToggle />
+          <ConnectButton />
+        </div>
       </div>
     </header>
   );

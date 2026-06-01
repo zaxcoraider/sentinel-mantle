@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import type { Address } from 'viem';
 import { parseAbiItem } from 'viem';
 import { AgentIdentityRegistryAbi } from '@/lib/contracts';
-import { NETWORK, DEPLOY_BLOCK } from '@/lib/network';
+import { NETWORKS } from '@/lib/networks';
+import { useClientNet } from '@/lib/hooks/use-client-net';
 import { collectLogs } from '@/lib/logs';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
@@ -21,6 +22,7 @@ export function Step2Agent() {
   const { address } = useAccount();
   const client = usePublicClient();
   const store = useOnboardStore();
+  const net = useClientNet();
 
   const [tokens, setTokens] = useState<AgentToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,12 +39,12 @@ export function Step2Agent() {
     setLoading(true);
     setError('');
 
-    const REGISTRY = NETWORK.AgentIdentityRegistry;
+    const REGISTRY = NETWORKS[net].deployments.AgentIdentityRegistry;
     const EVT_TRANSFER = parseAbiItem(
       'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)',
     );
 
-    collectLogs(client, DEPLOY_BLOCK, (f, t) =>
+    collectLogs(client, NETWORKS[net].deployBlock, (f, t) =>
       client.getLogs({ address: REGISTRY, event: EVT_TRANSFER, args: { to: address }, fromBlock: f, toBlock: t }),
     )
       .then(async (logs) => {
@@ -72,7 +74,7 @@ export function Step2Agent() {
       })
       .catch(() => setError('Failed to load identities.'))
       .finally(() => setLoading(false));
-  }, [address, client, mintDone]);
+  }, [address, client, mintDone, net]);
 
   const handleSelect = (t: AgentToken) => {
     store.setAgent(t.tokenId, t.agentAddress, t.registrationURI);
@@ -89,7 +91,7 @@ export function Step2Agent() {
     setMintError('');
     mint(
       {
-        address: NETWORK.AgentIdentityRegistry,
+        address: NETWORKS[net].deployments.AgentIdentityRegistry,
         abi: AgentIdentityRegistryAbi,
         functionName: 'mint',
         args: [address, trimmed, uriInput || 'ipfs://mock'],

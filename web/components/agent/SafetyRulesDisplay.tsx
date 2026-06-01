@@ -1,5 +1,4 @@
 import type { SafetyRulesConfig } from '@/lib/agent-data';
-import { EXPLORER_BASE } from '@/lib/network';
 
 function RuleTile({ glyph, label, value }: { glyph: string; label: string; value: string }) {
   return (
@@ -16,9 +15,11 @@ function RuleTile({ glyph, label, value }: { glyph: string; label: string; value
 export function SafetyRulesDisplay({
   rules,
   rulesAddress,
+  explorerBase,
 }: {
   rules: SafetyRulesConfig;
   rulesAddress: string;
+  explorerBase: string;
 }) {
   return (
     <div className="space-y-3">
@@ -35,7 +36,7 @@ export function SafetyRulesDisplay({
           rules contract <span className="text-sentinel-white">{rulesAddress.slice(0, 10)}…</span>
         </span>
         <a
-          href={`${EXPLORER_BASE}/address/${rulesAddress}`}
+          href={`${explorerBase}/address/${rulesAddress}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sentinel-blue hover:underline"

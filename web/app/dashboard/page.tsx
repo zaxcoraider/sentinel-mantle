@@ -7,11 +7,10 @@ import { type Address } from 'viem';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
 import { AgentRegistryAbi, AgentIdentityRegistryAbi, SentinelGuardAbi, NATIVE_TOKEN } from '@/lib/contracts';
-import { NETWORK, DEPLOY_BLOCK } from '@/lib/network';
+import { NETWORKS } from '@/lib/networks';
+import { useClientNet } from '@/lib/hooks/use-client-net';
 import { collectLogs } from '@/lib/logs';
 import { cn } from '@/lib/utils';
-
-const SEP = NETWORK;
 
 interface OwnedAgent {
   tokenId: bigint;
@@ -70,6 +69,9 @@ function AgentCard({ a }: { a: OwnedAgent }) {
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
+  const net = useClientNet();
+  const SEP = NETWORKS[net].deployments;
+  const DEPLOY_BLOCK = NETWORKS[net].deployBlock;
   const [agents, setAgents] = useState<OwnedAgent[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -180,7 +182,7 @@ export default function DashboardPage() {
     };
 
     void load();
-  }, [address, publicClient]);
+  }, [address, publicClient, net]);
 
   const guardedCount = agents.filter((a) => a.isGuarded).length;
   const trippedCount = agents.filter((a) => a.isPaused).length;

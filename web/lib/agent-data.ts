@@ -2,8 +2,8 @@
 // All reads are via the viem public client (chain.ts) — no browser APIs here.
 
 import { unstable_cache } from 'next/cache';
-import { getAddress, type Address } from 'viem';
-import { publicClient } from './chain';
+import { getAddress, type Address, type PublicClient } from 'viem';
+import { publicClientFor } from './chain';
 import {
   NATIVE_TOKEN,
   AgentRegistryAbi,
@@ -12,10 +12,8 @@ import {
   ReputationOracleAbi,
   AgentIdentityRegistryAbi,
 } from './contracts';
-import { NETWORK, DEPLOY_BLOCK } from './network';
+import { NETWORKS, DEFAULT_NET, type NetKey } from './networks';
 import { collectLogs } from './logs';
-
-const SEP = NETWORK;
 
 // ---- Types -----------------------------------------------------------------
 
@@ -89,10 +87,14 @@ const resolveUri = (uri: string): string => {
   return uri;
 };
 
-const fetchMetadata = async (tokenId: bigint): Promise<AgentMetadata | null> => {
+const fetchMetadata = async (
+  tokenId: bigint,
+  client: PublicClient,
+  registry: Address,
+): Promise<AgentMetadata | null> => {
   try {
-    const uri = (await publicClient.readContract({
-      address: SEP.AgentIdentityRegistry,
+    const uri = (await client.readContract({
+      address: registry,
       abi: AgentIdentityRegistryAbi,
       functionName: 'tokenURI',
       args: [tokenId],
@@ -125,7 +127,11 @@ const fetchMetadata = async (tokenId: bigint): Promise<AgentMetadata | null> => 
 
 // ---- Agent detail ----------------------------------------------------------
 
-const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
+const fetchAgentDetail = async (agent: Address, net: NetKey): Promise<AgentDetail> => {
+  const cfg = NETWORKS[net];
+  const client = publicClientFor(net);
+  const SEP = cfg.deployments;
+
   const EMPTY: AgentDetail = {
     agent,
     isGuarded: false,
@@ -140,7 +146,7 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
   };
 
   try {
-    const isGuarded = await publicClient.readContract({
+    const isGuarded = await client.readContract({
       address: SEP.AgentRegistry,
       abi: AgentRegistryAbi,
       functionName: 'isGuarded',
@@ -150,31 +156,31 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
     if (!isGuarded) return EMPTY;
 
     const [config, isPaused, repResult, mntBalance, owner] = await Promise.allSettled([
-      publicClient.readContract({
+      client.readContract({
         address: SEP.AgentRegistry,
         abi: AgentRegistryAbi,
         functionName: 'getGuardConfig',
         args: [agent],
       }),
-      publicClient.readContract({
+      client.readContract({
         address: SEP.SentinelGuard,
         abi: SentinelGuardAbi,
         functionName: 'isPaused',
         args: [agent],
       }),
-      publicClient.readContract({
+      client.readContract({
         address: SEP.ReputationOracle,
         abi: ReputationOracleAbi,
         functionName: 'getReputation',
         args: [agent],
       }),
-      publicClient.readContract({
+      client.readContract({
         address: SEP.SentinelGuard,
         abi: SentinelGuardAbi,
         functionName: 'balanceOf',
         args: [agent, NATIVE_TOKEN],
       }),
-      publicClient.readContract({
+      client.readContract({
         address: SEP.AgentRegistry,
         abi: AgentRegistryAbi,
         functionName: 'getAgentOwner',
@@ -191,13 +197,13 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
     if (guardConfig?.rulesContract) {
       const rulesAddr = guardConfig.rulesContract;
       const [drawdown, txph, oracle, volume, min, max, count] = await Promise.allSettled([
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'maxDrawdownBps' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'maxTxPerHour' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'oracleDeviationBps' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'dailyVolumeCapUsd' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'timeOfDayMin' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'timeOfDayMax' }),
-        publicClient.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'allowedProtocolCount' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'maxDrawdownBps' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'maxTxPerHour' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'oracleDeviationBps' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'dailyVolumeCapUsd' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'timeOfDayMin' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'timeOfDayMax' }),
+        client.readContract({ address: rulesAddr, abi: SafetyRulesAbi, functionName: 'allowedProtocolCount' }),
       ]);
       rulesConfig = {
         maxDrawdownBps: drawdown.status === 'fulfilled' ? (drawdown.value as bigint) : BigInt(0),
@@ -216,7 +222,7 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
         ? (repResult.value as [bigint, bigint, bigint])
         : null;
     if (rep) {
-      const hist = await publicClient.readContract({
+      const hist = await client.readContract({
         address: SEP.ReputationOracle,
         abi: ReputationOracleAbi,
         functionName: 'getAgentHistory',
@@ -240,7 +246,7 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
         : 0;
 
     const metadata = guardConfig
-      ? await fetchMetadata(guardConfig.erc8004TokenId)
+      ? await fetchMetadata(guardConfig.erc8004TokenId, client, SEP.AgentIdentityRegistry)
       : null;
 
     return {
@@ -276,15 +282,17 @@ const fetchAgentDetail = async (agent: Address): Promise<AgentDetail> => {
   }
 };
 
-export const getAgentDetail = unstable_cache(
-  fetchAgentDetail,
-  ['agent-detail'],
-  { revalidate: 30 },
-);
+export const getAgentDetail = (agent: Address, net: NetKey = DEFAULT_NET) =>
+  unstable_cache(() => fetchAgentDetail(agent, net), ['agent-detail', agent, net], {
+    revalidate: 30,
+  })();
 
 // ---- Leaderboard -----------------------------------------------------------
 
-const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+const fetchLeaderboard = async (net: NetKey): Promise<LeaderboardEntry[]> => {
+  const cfg = NETWORKS[net];
+  const client = publicClientFor(net);
+  const SEP = cfg.deployments;
   try {
     // Get all AgentGuarded events to find all registered agents
     const AGENT_GUARDED = {
@@ -297,8 +305,8 @@ const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
         { name: 'guardContract', type: 'address', indexed: false },
       ],
     } as const;
-    const logs = await collectLogs(publicClient, DEPLOY_BLOCK, (f, t) =>
-      publicClient.getLogs({ address: SEP.AgentRegistry, event: AGENT_GUARDED, fromBlock: f, toBlock: t }),
+    const logs = await collectLogs(client, cfg.deployBlock, (f, t) =>
+      client.getLogs({ address: SEP.AgentRegistry, event: AGENT_GUARDED, fromBlock: f, toBlock: t }),
     );
 
     // Deduplicate (re-registrations possible)
@@ -308,25 +316,25 @@ const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
     const results = await Promise.allSettled(
       agents.slice(0, 100).map(async (agent) => {
         const [isGuardedRes, repRes, pausedRes, configRes] = await Promise.allSettled([
-          publicClient.readContract({
+          client.readContract({
             address: SEP.AgentRegistry,
             abi: AgentRegistryAbi,
             functionName: 'isGuarded',
             args: [agent],
           }),
-          publicClient.readContract({
+          client.readContract({
             address: SEP.ReputationOracle,
             abi: ReputationOracleAbi,
             functionName: 'getReputation',
             args: [agent],
           }),
-          publicClient.readContract({
+          client.readContract({
             address: SEP.SentinelGuard,
             abi: SentinelGuardAbi,
             functionName: 'isPaused',
             args: [agent],
           }),
-          publicClient.readContract({
+          client.readContract({
             address: SEP.AgentRegistry,
             abi: AgentRegistryAbi,
             functionName: 'getGuardConfig',
@@ -383,6 +391,7 @@ const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   }
 };
 
-export const getLeaderboard = unstable_cache(fetchLeaderboard, ['leaderboard'], {
-  revalidate: 60,
-});
+export const getLeaderboard = (net: NetKey = DEFAULT_NET) =>
+  unstable_cache(() => fetchLeaderboard(net), ['leaderboard', net], {
+    revalidate: 60,
+  })();

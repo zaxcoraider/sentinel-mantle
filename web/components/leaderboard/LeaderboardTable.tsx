@@ -77,7 +77,13 @@ function Podium({ entries }: { entries: (LeaderboardEntry & { rank: number })[] 
   );
 }
 
-export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
+export function LeaderboardTable({
+  entries,
+  networkLabel = 'Mantle Mainnet',
+}: {
+  entries: LeaderboardEntry[];
+  networkLabel?: string;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -107,7 +113,7 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
       <div className="flex items-center gap-2 mb-5">
         <span className="font-mono text-[11px] tracking-[0.18em] uppercase px-3 py-1 border border-sentinel-cyan/40 text-sentinel-cyan bg-sentinel-cyan/5 flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-sentinel-cyan animate-glow-pulse" />
-          Mantle Mainnet
+          {networkLabel}
         </span>
         {sorted.length > 0 && (
           <span className="font-mono text-[10px] text-sentinel-gray-1">

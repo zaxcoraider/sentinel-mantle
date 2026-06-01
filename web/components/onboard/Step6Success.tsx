@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { useOnboardStore } from '@/lib/store/onboard-store';
-import { EXPLORER_BASE } from '@/lib/network';
+import { NETWORKS } from '@/lib/networks';
+import { useClientNet } from '@/lib/hooks/use-client-net';
 
 export function Step6Success() {
   const store = useOnboardStore();
   const { selectedAgent, registeredTxHash, deployedRulesAddress } = store;
+  const net = useClientNet();
 
-  const explorerBase = EXPLORER_BASE;
+  const explorerBase = NETWORKS[net].explorerBase;
   const agentUrl = selectedAgent ? `/agent/${selectedAgent}` : '/dashboard';
 
   const tweetText = encodeURIComponent(

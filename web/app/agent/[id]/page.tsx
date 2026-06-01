@@ -5,10 +5,11 @@ import { SafetyRulesDisplay } from '@/components/agent/SafetyRulesDisplay';
 import { ReputationChart } from '@/components/agent/ReputationChart';
 import { RulesEditorButton } from '@/components/agent/RulesEditorButton';
 import { getAgentDetail } from '@/lib/agent-data';
-import { EXPLORER_BASE } from '@/lib/network';
+import { getServerNet } from '@/lib/server-net';
+import { NETWORKS } from '@/lib/networks';
 import { cn } from '@/lib/utils';
 
-export const revalidate = 30;
+export const dynamic = 'force-dynamic';
 
 // ---- Status badge ----------------------------------------------------------
 
@@ -71,7 +72,8 @@ export default async function AgentPage({
   if (!isAddress(raw)) notFound();
   const agent = raw as Address;
 
-  const data = await getAgentDetail(agent);
+  const net = getServerNet();
+  const data = await getAgentDetail(agent, net);
   if (!data.isGuarded) {
     return (
       <>
@@ -97,7 +99,7 @@ export default async function AgentPage({
     );
   }
 
-  const expBase = EXPLORER_BASE;
+  const expBase = NETWORKS[net].explorerBase;
   const mntFormatted = formatUnits(data.nativeMntBalance, 18);
 
   return (
@@ -238,6 +240,7 @@ export default async function AgentPage({
               <SafetyRulesDisplay
                 rules={data.rules}
                 rulesAddress={data.config.rulesContract}
+                explorerBase={expBase}
               />
             </div>
           )}

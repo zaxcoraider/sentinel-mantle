@@ -2,15 +2,16 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { http } from 'wagmi';
 import { mantleMainnet, mantleSepolia } from './chains';
-import { IS_MAINNET } from './network';
+import { DEFAULT_NET } from './networks';
 
 export { mantleSepolia, mantleMainnet } from './chains';
 
-// Active network first (= the default the wallet is prompted to use); keep the
-// other Mantle network available so wrong-network detection still works.
-const chains = IS_MAINNET
-  ? ([mantleMainnet, mantleSepolia] as const)
-  : ([mantleSepolia, mantleMainnet] as const);
+// Default network first (= what the wallet is prompted to use); both Mantle
+// networks are supported so the in-app toggle can switch between them.
+const chains =
+  DEFAULT_NET === 'sepolia'
+    ? ([mantleSepolia, mantleMainnet] as const)
+    : ([mantleMainnet, mantleSepolia] as const);
 
 export const wagmiConfig = getDefaultConfig({
   appName: 'Sentinel',

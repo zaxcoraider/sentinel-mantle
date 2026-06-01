@@ -10,7 +10,8 @@ import {
   AgentRegistryAbi,
   SentinelGuardAbi,
 } from '@/lib/contracts';
-import { NETWORK } from '@/lib/network';
+import { NETWORKS } from '@/lib/networks';
+import { useClientNet } from '@/lib/hooks/use-client-net';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,8 @@ export function Step5Confirm() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const store = useOnboardStore();
+  const net = useClientNet();
+  const NET = NETWORKS[net].deployments;
 
   const [phase, setPhase] = useState<TxPhase>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -106,10 +109,10 @@ export function Step5Confirm() {
       // 3. Register with AgentRegistry
       setPhase('registering');
       const regHash = await walletClient.writeContract({
-        address: NETWORK.AgentRegistry,
+        address: NET.AgentRegistry,
         abi: AgentRegistryAbi,
         functionName: 'register',
-        args: [BigInt(selectedTokenId), rulesAddress, NETWORK.SentinelGuard],
+        args: [BigInt(selectedTokenId), rulesAddress, NET.SentinelGuard],
       });
       await publicClient.waitForTransactionReceipt({ hash: regHash });
       store.setRegisteredTx(regHash);
@@ -124,13 +127,13 @@ export function Step5Confirm() {
             address: deposit.token as Address,
             abi: erc20Abi,
             functionName: 'approve',
-            args: [NETWORK.SentinelGuard, amountWei],
+            args: [NET.SentinelGuard, amountWei],
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
-            address: NETWORK.SentinelGuard,
+            address: NET.SentinelGuard,
             abi: SentinelGuardAbi,
             functionName: 'depositForAgent',
             args: [selectedAgent, deposit.token as Address, amountWei],
@@ -139,7 +142,7 @@ export function Step5Confirm() {
         } else {
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
-            address: NETWORK.SentinelGuard,
+            address: NET.SentinelGuard,
             abi: SentinelGuardAbi,
             functionName: 'depositNativeForAgent',
             args: [selectedAgent],

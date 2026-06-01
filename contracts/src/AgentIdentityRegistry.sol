@@ -4,12 +4,18 @@ pragma solidity 0.8.24;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /**
- * @title MockIdentityRegistry
- * @notice Minimal ERC-8004 Identity Registry stand-in for tests and testnet.
- * @dev Implements the IERC8004Identity surface on top of OpenZeppelin ERC721.
- *      Not for mainnet — the real registry is curated by Mantle.
+ * @title AgentIdentityRegistry
+ * @notice Permissionless ERC-8004-style identity registry for autonomous agents.
+ *         Each token is one agent identity, resolving to the agent's on-chain
+ *         operating address and a registration metadata URI.
+ * @dev Implements the IERC8004Identity surface (ownerOf via ERC721, plus
+ *      getAgent) so AgentRegistry can resolve and authorize agents. Sentinel
+ *      deploys this where no canonical ERC-8004 registry exposes a compatible
+ *      getAgent(uint256) view.
+ * @author Sentinel
+ * @custom:security-contact security@sentinel.guard
  */
-contract MockIdentityRegistry is ERC721 {
+contract AgentIdentityRegistry is ERC721 {
     struct AgentInfo {
         address agentAddress;
         string registrationURI;
@@ -18,10 +24,10 @@ contract MockIdentityRegistry is ERC721 {
     mapping(uint256 tokenId => AgentInfo info) internal _agents;
     uint256 internal _nextId;
 
-    constructor() ERC721("Mock ERC-8004 Identity", "AGENT") {}
+    constructor() ERC721("Sentinel Agent Identity", "AGENT") {}
 
     /**
-     * @notice Mint a mock identity token.
+     * @notice Mint an agent identity token.
      * @param to The owner of the identity NFT.
      * @param agentAddress The agent address this identity resolves to.
      * @param registrationURI Metadata URI for the agent.

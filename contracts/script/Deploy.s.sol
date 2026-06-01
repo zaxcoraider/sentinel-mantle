@@ -6,14 +6,14 @@ import {ReputationOracle} from "../src/ReputationOracle.sol";
 import {EmergencyVault} from "../src/EmergencyVault.sol";
 import {AgentRegistry} from "../src/AgentRegistry.sol";
 import {SentinelGuard} from "../src/SentinelGuard.sol";
-import {MockIdentityRegistry} from "../test/mocks/MockIdentityRegistry.sol";
+import {AgentIdentityRegistry} from "../src/AgentIdentityRegistry.sol";
 
 /**
  * @title Deploy
  * @notice Deploys the full Sentinel protocol suite and wires authorization.
  * @dev Required env: PRIVATE_KEY, MONITOR_ADDRESS.
- *      Optional env: IDENTITY_REGISTRY (the ERC-8004 registry — if unset, a
- *      MockIdentityRegistry is deployed for testnet), WITHDRAW_DELAY (seconds).
+ *      Optional env: IDENTITY_REGISTRY (an existing ERC-8004-compatible registry —
+ *      if unset, a fresh AgentIdentityRegistry is deployed), WITHDRAW_DELAY (seconds).
  */
 contract Deploy is Script {
     function run() external {
@@ -28,9 +28,9 @@ contract Deploy is Script {
         ReputationOracle reputation = new ReputationOracle(deployer);
         EmergencyVault emergencyVault = new EmergencyVault(withdrawDelay);
 
-        // Testnet has no ERC-8004 registry — deploy a mock if none was supplied.
+        // No compatible registry supplied — deploy our own ERC-8004 identity registry.
         if (identityRegistry == address(0)) {
-            identityRegistry = address(new MockIdentityRegistry());
+            identityRegistry = address(new AgentIdentityRegistry());
         }
         AgentRegistry registry = new AgentRegistry(identityRegistry);
 

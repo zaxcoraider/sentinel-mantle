@@ -7,13 +7,13 @@ import {AgentRegistry} from "../src/AgentRegistry.sol";
 import {ReputationOracle} from "../src/ReputationOracle.sol";
 import {EmergencyVault} from "../src/EmergencyVault.sol";
 import {SafetyRules} from "../src/SafetyRules.sol";
-import {MockIdentityRegistry} from "./mocks/MockIdentityRegistry.sol";
+import {AgentIdentityRegistry} from "../src/AgentIdentityRegistry.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockTarget} from "./mocks/MockTarget.sol";
 import {ReentrancyAttacker} from "./mocks/ReentrancyAttacker.sol";
 
 contract SentinelGuardTest is Test {
-    MockIdentityRegistry internal identity;
+    AgentIdentityRegistry internal identity;
     ReputationOracle internal reputation;
     EmergencyVault internal vault;
     AgentRegistry internal registry;
@@ -32,7 +32,7 @@ contract SentinelGuardTest is Test {
     uint256 internal constant WITHDRAW_DELAY = 5 minutes;
 
     function setUp() public {
-        identity = new MockIdentityRegistry();
+        identity = new AgentIdentityRegistry();
         reputation = new ReputationOracle(oracleOwner);
         vault = new EmergencyVault(WITHDRAW_DELAY);
         registry = new AgentRegistry(address(identity));

@@ -46,22 +46,24 @@ executes; value-based anomalies (drawdown, oracle deviation, volume) are detecte
 | 3 — Off-chain monitor | **Done** — 49 vitest tests, anomaly engine + Pyth + SSE + health |
 | 4 — Frontend dashboard | **Done** — 6 pages, deployed to Vercel |
 | 5.1 — Demo agents | **Done** — 3 victim agents, setup/reset/manual-trigger scripts |
-| 5.2 — Mainnet deploy | Pending |
+| 5.2 — Mainnet deploy | **Done** — full suite live on Mantle Mainnet (chain 5000) |
 | 6 — Polish + submission | Pending |
 
-## Live contracts (Mantle Sepolia, chain 5003)
+## Live contracts (Mantle Mainnet, chain 5000)
 
 | Contract | Address |
 |---|---|
-| SentinelGuard | [`0x929EC63c…6eCF22642`](https://explorer.sepolia.mantle.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642) |
-| AgentRegistry | [`0x5c570A7C…6DF549356`](https://explorer.sepolia.mantle.xyz/address/0x5c570A7C3De89bd4E27df65D6aFafD66DF549356) |
-| ReputationOracle | [`0x2688B012…fF1463a7f`](https://explorer.sepolia.mantle.xyz/address/0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f) |
-| EmergencyVault | [`0x7A1E8Ea5…2Ce3cCe5`](https://explorer.sepolia.mantle.xyz/address/0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5) |
-| MockIdentityRegistry | [`0xbbb12950…1be8CA91`](https://explorer.sepolia.mantle.xyz/address/0xbbb129508fdCCB59334432c5C3d6b4251be8CA91) |
+| SentinelGuard | [`0x929EC63c…6eCF22642`](https://mantlescan.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642) |
+| AgentRegistry | [`0x5c570A7C…6DF549356`](https://mantlescan.xyz/address/0x5c570A7C3De89bd4E27df65D6aFafD66DF549356) |
+| ReputationOracle | [`0x2688B012…fF1463a7f`](https://mantlescan.xyz/address/0x2688B0125E22fDAE168fb3B3B7635A8fF1463a7f) |
+| EmergencyVault | [`0x7A1E8Ea5…2Ce3cCe5`](https://mantlescan.xyz/address/0x7A1E8Ea5a054879dE96C01973b3D67ad2Ce3cCe5) |
+| AgentIdentityRegistry | [`0xbbb12950…1be8CA91`](https://mantlescan.xyz/address/0xbbb129508fdCCB59334432c5C3d6b4251be8CA91) |
 
-Deployer wallet: `0xDb45be03…ae929828f4` · Monitor wallet: `0x92e86524…F370Adfb6`
+`EmergencyVault` enforces a 24-hour timelock on mainnet. The full suite is also
+deployed and verified on **Mantle Sepolia (chain 5003)** at the same addresses
+(see [`contracts/deployments/sepolia.json`](contracts/deployments/sepolia.json)).
 
-Mainnet deploy targeted at Phase 5.2; addresses will be added here once live.
+Deployer wallet: `0xDb45be03…ae929828f4` · Monitor wallet: `0xbD729a35…09E2Cf43`
 
 ## Stack
 
@@ -103,11 +105,12 @@ pnpm dev                  # http://localhost:3000
 # Point at local monitor with NEXT_PUBLIC_MONITOR_URL=http://localhost:8080
 
 # Demo agents (Sepolia dry-run)
+# NOTE: use `pnpm run <script>` — bare `pnpm setup` hits pnpm's builtin, not ours.
 cd demo-agents
-cp .env.example .env      # fill DEPLOYER_PRIVATE_KEY + MONITOR_PRIVATE_KEY
-pnpm setup                # mint 3 NFTs + deploy 3 SafetyRules + register + fund
-pnpm agents:start         # spawn YieldChaser / ProtocolHopper / Insomniac
-pnpm manual:trigger yieldchaser MAX_DRAWDOWN   # fire breaker for the demo
+cp .env.example .env          # fill DEPLOYER_PRIVATE_KEY + MONITOR_PRIVATE_KEY
+pnpm run setup                # mint 3 NFTs + deploy 3 SafetyRules + register + fund
+pnpm run agents:start         # spawn YieldChaser / ProtocolHopper / Insomniac
+pnpm run manual:trigger yieldchaser MAX_DRAWDOWN   # fire breaker for the demo
 ```
 
 ## Mantle-specific notes

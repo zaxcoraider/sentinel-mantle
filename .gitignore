@@ -21,6 +21,10 @@ node_modules/
 # Build
 dist/
 build/
+*.tsbuildinfo
+
+# Local Claude Code config
+.claude/
 
 # Local data
 /monitor/data/

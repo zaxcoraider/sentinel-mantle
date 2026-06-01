@@ -3,10 +3,10 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {AgentRegistry} from "../src/AgentRegistry.sol";
-import {MockIdentityRegistry} from "./mocks/MockIdentityRegistry.sol";
+import {AgentIdentityRegistry} from "../src/AgentIdentityRegistry.sol";
 
 contract AgentRegistryTest is Test {
-    MockIdentityRegistry internal identity;
+    AgentIdentityRegistry internal identity;
     AgentRegistry internal registry;
 
     address internal owner = makeAddr("owner");
@@ -25,7 +25,7 @@ contract AgentRegistryTest is Test {
     event AgentDeregistered(address indexed agent, uint256 indexed tokenId);
 
     function setUp() public {
-        identity = new MockIdentityRegistry();
+        identity = new AgentIdentityRegistry();
         registry = new AgentRegistry(address(identity));
         tokenId = identity.mint(owner, agent, "ipfs://agent-meta");
     }

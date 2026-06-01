@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
+import { useAccount, useWalletClient, useSwitchChain } from 'wagmi';
 import { parseUnits, erc20Abi } from 'viem';
 import type { Address, Hex } from 'viem';
 import {
@@ -11,7 +11,7 @@ import {
   SentinelGuardAbi,
 } from '@/lib/contracts';
 import { NETWORKS } from '@/lib/networks';
-import { useClientNet } from '@/lib/hooks/use-client-net';
+import { useNetPublicClient } from '@/lib/hooks/use-client-net';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
@@ -54,11 +54,11 @@ function PhaseRow({ phase, current, label }: { phase: TxPhase; current: TxPhase;
 }
 
 export function Step5Confirm() {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
+  const { switchChainAsync } = useSwitchChain();
+  const { net, client: readClient } = useNetPublicClient();
   const store = useOnboardStore();
-  const net = useClientNet();
   const NET = NETWORKS[net].deployments;
 
   const [phase, setPhase] = useState<TxPhase>('idle');
@@ -70,8 +70,19 @@ export function Step5Confirm() {
   const isERC20Deposit = hasDeposit && deposit.token !== 'NATIVE';
 
   const run = async () => {
-    if (!walletClient || !publicClient || !address || !selectedAgent || !selectedTokenId) return;
+    if (!walletClient || !address || !selectedAgent || !selectedTokenId) return;
     setErrorMsg('');
+
+    // Make sure the wallet is on the selected network before any write.
+    const target = NETWORKS[net].chainId;
+    if (chainId !== target) {
+      try {
+        await switchChainAsync({ chainId: target });
+      } catch {
+        setErrorMsg(`Switch your wallet to ${NETWORKS[net].label} to continue.`);
+        return;
+      }
+    }
 
     try {
       // 1. Deploy SafetyRules
@@ -89,7 +100,7 @@ export function Step5Confirm() {
           rules.timeOfDayMax,
         ],
       });
-      const rulesReceipt = await publicClient.waitForTransactionReceipt({ hash: rulesHash });
+      const rulesReceipt = await readClient.waitForTransactionReceipt({ hash: rulesHash });
       const rulesAddress = rulesReceipt.contractAddress;
       if (!rulesAddress) throw new Error('SafetyRules deployment failed — no contract address.');
       store.setDeployedRules(rulesAddress);
@@ -103,7 +114,7 @@ export function Step5Confirm() {
           functionName: 'allowProtocolsBatch',
           args: [rules.allowedProtocols as Address[]],
         });
-        await publicClient.waitForTransactionReceipt({ hash: protoHash });
+        await readClient.waitForTransactionReceipt({ hash: protoHash });
       }
 
       // 3. Register with AgentRegistry
@@ -114,7 +125,7 @@ export function Step5Confirm() {
         functionName: 'register',
         args: [BigInt(selectedTokenId), rulesAddress, NET.SentinelGuard],
       });
-      await publicClient.waitForTransactionReceipt({ hash: regHash });
+      await readClient.waitForTransactionReceipt({ hash: regHash });
       store.setRegisteredTx(regHash);
 
       // 4. Deposit (optional)
@@ -129,7 +140,7 @@ export function Step5Confirm() {
             functionName: 'approve',
             args: [NET.SentinelGuard, amountWei],
           });
-          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          await readClient.waitForTransactionReceipt({ hash: approveHash });
 
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
@@ -138,7 +149,7 @@ export function Step5Confirm() {
             functionName: 'depositForAgent',
             args: [selectedAgent, deposit.token as Address, amountWei],
           });
-          await publicClient.waitForTransactionReceipt({ hash: depositHash });
+          await readClient.waitForTransactionReceipt({ hash: depositHash });
         } else {
           setPhase('depositing');
           const depositHash = await walletClient.writeContract({
@@ -148,7 +159,7 @@ export function Step5Confirm() {
             args: [selectedAgent],
             value: amountWei,
           });
-          await publicClient.waitForTransactionReceipt({ hash: depositHash });
+          await readClient.waitForTransactionReceipt({ hash: depositHash });
         }
       }
 

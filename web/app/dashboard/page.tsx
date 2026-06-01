@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useAccount, usePublicClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { type Address } from 'viem';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
 import { AgentRegistryAbi, AgentIdentityRegistryAbi, SentinelGuardAbi, NATIVE_TOKEN } from '@/lib/contracts';
 import { NETWORKS } from '@/lib/networks';
-import { useClientNet } from '@/lib/hooks/use-client-net';
+import { useNetPublicClient } from '@/lib/hooks/use-client-net';
 import { collectLogs } from '@/lib/logs';
 import { cn } from '@/lib/utils';
 
@@ -68,8 +68,7 @@ function AgentCard({ a }: { a: OwnedAgent }) {
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
-  const net = useClientNet();
+  const { net, client: publicClient } = useNetPublicClient();
   const SEP = NETWORKS[net].deployments;
   const DEPLOY_BLOCK = NETWORKS[net].deployBlock;
   const [agents, setAgents] = useState<OwnedAgent[]>([]);

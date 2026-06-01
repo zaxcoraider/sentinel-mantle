@@ -1,12 +1,12 @@
 'use client';
 
-import { useAccount, usePublicClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
 import { useEffect, useState } from 'react';
 import type { Address } from 'viem';
 import { parseAbiItem } from 'viem';
 import { AgentIdentityRegistryAbi } from '@/lib/contracts';
 import { NETWORKS } from '@/lib/networks';
-import { useClientNet } from '@/lib/hooks/use-client-net';
+import { useNetPublicClient } from '@/lib/hooks/use-client-net';
 import { collectLogs } from '@/lib/logs';
 import { useOnboardStore } from '@/lib/store/onboard-store';
 import { friendlyError } from '@/lib/errors';
@@ -19,10 +19,10 @@ interface AgentToken {
 }
 
 export function Step2Agent() {
-  const { address } = useAccount();
-  const client = usePublicClient();
+  const { address, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
+  const { net, client } = useNetPublicClient();
   const store = useOnboardStore();
-  const net = useClientNet();
 
   const [tokens, setTokens] = useState<AgentToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +83,12 @@ export function Step2Agent() {
 
   const handleMint = () => {
     if (!address) return;
+    const target = NETWORKS[net].chainId;
+    if (chainId !== target) {
+      switchChain?.({ chainId: target });
+      setMintError(`Switch your wallet to ${NETWORKS[net].label}, then mint.`);
+      return;
+    }
     const trimmed = agentInput.trim() as Address;
     if (!/^0x[0-9a-fA-F]{40}$/.test(trimmed)) {
       setMintError('Enter a valid 0x address for the agent.');

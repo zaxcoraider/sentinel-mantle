@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { NET_COOKIE, DEFAULT_NET, toNetKey, type NetKey } from '../networks';
+import { useEffect, useMemo, useState } from 'react';
+import { createPublicClient, fallback, http, type PublicClient } from 'viem';
+import { NET_COOKIE, DEFAULT_NET, NETWORKS, toNetKey, type NetKey } from '../networks';
 
 export function readNetCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
@@ -17,4 +18,19 @@ export function useClientNet(): NetKey {
     setNet(toNetKey(readNetCookie()));
   }, []);
   return net;
+}
+
+// A read-only viem client bound to the SELECTED network (cookie), independent of
+// the wallet's connected chain — so data reads always match the toggle even if
+// the wallet is momentarily on a different chain.
+export function useNetPublicClient(): { net: NetKey; client: PublicClient } {
+  const net = useClientNet();
+  const client = useMemo(() => {
+    const cfg = NETWORKS[net];
+    return createPublicClient({
+      chain: cfg.chain,
+      transport: fallback([http(cfg.primaryRpc), http(cfg.fallbackRpc)]),
+    }) as PublicClient;
+  }, [net]);
+  return { net, client };
 }

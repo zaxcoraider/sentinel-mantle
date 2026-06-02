@@ -166,6 +166,15 @@ export default async function AgentPage({
                 >
                   Mantlescan ↗
                 </a>
+                <a
+                  href={`/api/agent/${agent}/registration?net=${net}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="ERC-8004 Agent Registration File (JSON)"
+                  className="font-mono text-[10px] text-sentinel-cyan/80 hover:text-sentinel-cyan transition-colors border border-sentinel-cyan/30 px-2 py-0.5"
+                >
+                  ERC-8004 ↗
+                </a>
               </div>
             </div>
           </div>

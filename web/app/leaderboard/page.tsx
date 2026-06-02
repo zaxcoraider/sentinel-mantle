@@ -28,7 +28,7 @@ export default async function LeaderboardPage() {
   const entries = await getLeaderboard(net);
   const networkLabel = NETWORKS[net].label;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://agentsentinel.vercel.app';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://agentsentinel.space';
   const shareUrl = encodeURIComponent(`${appUrl}/leaderboard`);
   const tweetText = encodeURIComponent(
     `Sentinel leaderboard — top AI agents guarded on @0xMantle.\n\nCircuit breakers, reputation scores, real safety rules.`,

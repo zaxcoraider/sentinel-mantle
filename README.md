@@ -10,7 +10,7 @@
 
 ## Live
 
-- **App:** https://agentsentinel.vercel.app
+- **App:** https://agentsentinel.space
 - **Network switch:** test the whole flow on **free Mantle Sepolia** before trusting real funds on **Mantle Mainnet** — toggle in the nav.
 - **Contracts:** [verified on Mantlescan](https://mantlescan.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642) (chain 5000)
 - **Demo video:** _coming soon_

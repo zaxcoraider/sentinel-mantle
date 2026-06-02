@@ -152,7 +152,7 @@ export async function GET() {
             color: '#737373',
           }}
         >
-          <div>agentsentinel.vercel.app/leaderboard</div>
+          <div>agentsentinel.space/leaderboard</div>
           <div style={{ color: '#2563eb' }}>
             Circuit breakers for autonomous AI agents
           </div>

@@ -71,7 +71,7 @@ export async function GET() {
           }}
         >
           <div style={{ fontSize: '14px', color: '#737373', fontFamily: 'monospace' }}>
-            sentinel.guard
+            agentsentinel.space
           </div>
           <div
             style={{

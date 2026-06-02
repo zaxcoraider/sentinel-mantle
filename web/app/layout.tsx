@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     'The circuit breaker for autonomous AI agents on Mantle Network. Wrap your ERC-8004 agent. Sleep at night.',
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinel.guard',
+    process.env.NEXT_PUBLIC_APP_URL ?? 'https://agentsentinel.space',
   ),
   openGraph: {
     title: 'SENTINEL Agent Circuit Breaker',

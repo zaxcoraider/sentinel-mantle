@@ -13,7 +13,7 @@ export function Nav({ hideLinks }: Props) {
       <div className="max-w-7xl mx-auto h-full px-4 md:px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/logo-mark.svg"
+            src="/logo-mark.png"
             alt="Sentinel shield mark"
             width={24}
             height={24}

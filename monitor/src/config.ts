@@ -149,6 +149,8 @@ export const loadConfig = (network = "sepolia"): MonitorConfig => {
     alertWebhookUrl: process.env.ALERT_WEBHOOK_URL || undefined,
     dexPools: parseDexPools(process.env.DEX_POOLS),
     dbPath: join(PROJECT_ROOT, "monitor", "data", "agents.db"),
-    healthPort: Number(process.env.MONITOR_HEALTH_PORT ?? 8080),
+    // Hosting platforms (Railway/Render/Fly) inject PORT; fall back to the
+    // local MONITOR_HEALTH_PORT, then 8080.
+    healthPort: Number(process.env.PORT ?? process.env.MONITOR_HEALTH_PORT ?? 8080),
   };
 };

@@ -1,15 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useOnboardStore, type SafetyRulesForm } from '@/lib/store/onboard-store';
+import { COMMON_PROTOCOLS } from '@/lib/protocols';
 
-const COMMON_PROTOCOLS = [
-  { label: 'Merchant Moe', address: '0x0000000000000000000000000000000000000001' },
-  { label: 'Agni Finance', address: '0x0000000000000000000000000000000000000002' },
-  { label: 'FusionX', address: '0x0000000000000000000000000000000000000003' },
-];
+interface ParseRulesResponse {
+  rules?: SafetyRulesForm;
+  notes?: string;
+  error?: string;
+}
 
 const schema = z
   .object({
@@ -64,6 +66,42 @@ export function Step3Rules() {
 
   const protocols = watch('allowedProtocols');
 
+  const [nlText, setNlText] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [aiNotes, setAiNotes] = useState<string | undefined>();
+  const [aiError, setAiError] = useState<string | undefined>();
+
+  const generate = async () => {
+    setGenerating(true);
+    setAiNotes(undefined);
+    setAiError(undefined);
+    try {
+      const res = await fetch('/api/parse-rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: nlText }),
+      });
+      const data = (await res.json()) as ParseRulesResponse;
+      if (!res.ok || !data.rules) {
+        setAiError(data.error ?? 'Could not generate rules. Try again.');
+        return;
+      }
+      const r = data.rules;
+      setValue('maxDrawdownBps', r.maxDrawdownBps, { shouldDirty: true });
+      setValue('maxTxPerHour', r.maxTxPerHour, { shouldDirty: true });
+      setValue('oracleDeviationBps', r.oracleDeviationBps, { shouldDirty: true });
+      setValue('dailyVolumeCapUsd', r.dailyVolumeCapUsd, { shouldDirty: true });
+      setValue('timeOfDayMin', r.timeOfDayMin, { shouldDirty: true });
+      setValue('timeOfDayMax', r.timeOfDayMax, { shouldDirty: true });
+      setValue('allowedProtocols', r.allowedProtocols, { shouldDirty: true });
+      setAiNotes(data.notes);
+    } catch {
+      setAiError('Network error reaching the AI. Try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const toggleProtocol = (addr: string) => {
     const current = protocols ?? [];
     const next = current.includes(addr) ? current.filter((a) => a !== addr) : [...current, addr];
@@ -84,6 +122,38 @@ export function Step3Rules() {
         <p className="mt-1 text-sm text-sentinel-gray-1">
           These rules are deployed on-chain as your agent&apos;s SafetyRules contract.
         </p>
+      </div>
+
+      <div className="surface px-4 py-4 border border-sentinel-cyan/30 glow-box-cyan">
+        <p className="eyebrow text-sentinel-cyan">✦ Describe it in plain English</p>
+        <p className="font-mono text-xs text-sentinel-gray-1 mt-1 mb-3">
+          Tell Sentinel your risk limits in a sentence — AI drafts the rules below. Always review before continuing.
+        </p>
+        <textarea
+          value={nlText}
+          onChange={(e) => setNlText(e.target.value)}
+          rows={3}
+          placeholder="e.g. Don't let it lose more than 15% in a day, only trade on Merchant Moe and Agni, max 10 swaps an hour, and pause if a stablecoin depegs 2%."
+          className="w-full font-mono text-xs bg-sentinel-gray-2 border border-sentinel-gray-2 focus:border-sentinel-cyan px-3 py-2 outline-none text-sentinel-white resize-none"
+        />
+        <div className="flex items-center justify-between gap-3 mt-2">
+          <button
+            type="button"
+            onClick={generate}
+            disabled={generating || nlText.trim().length < 3}
+            className="font-mono text-xs tracking-widest uppercase px-4 py-2 text-sentinel-white bg-sentinel-cyan/20 border border-sentinel-cyan/60 hover:bg-sentinel-cyan/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            {generating ? 'Generating…' : 'Generate rules with AI'}
+          </button>
+          {aiNotes && (
+            <p className="font-mono text-[11px] leading-snug text-sentinel-cyan/80 text-right">
+              {aiNotes}
+            </p>
+          )}
+        </div>
+        {aiError && (
+          <p className="font-mono text-xs text-sentinel-danger mt-2">{aiError}</p>
+        )}
       </div>
 
       <div className="surface px-4">

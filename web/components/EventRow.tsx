@@ -20,10 +20,13 @@ const EVENT_PREFIX: Record<WallEvent['type'], string> = {
 
 interface Props {
   event: WallEvent;
-  explorerBase?: string;
+  // Required: the selected network's explorer base (passed from the page that
+  // knows the active net). No hardcoded default — that caused cross-network
+  // bleed where links opened the wrong explorer after toggling.
+  explorerBase: string;
 }
 
-export function EventRow({ event, explorerBase = 'https://explorer.sepolia.mantle.xyz' }: Props) {
+export function EventRow({ event, explorerBase }: Props) {
   const shortAgent = `${event.agent.slice(0, 6)}…${event.agent.slice(-4)}`;
 
   return (

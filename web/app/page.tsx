@@ -10,6 +10,7 @@ import { ConnectRedirect } from '@/components/ConnectRedirect';
 import { BreakerVisual } from '@/components/BreakerVisual';
 import { getLandingData } from '@/lib/landing-data';
 import { getServerNet } from '@/lib/server-net';
+import { NETWORKS } from '@/lib/networks';
 
 export const metadata: Metadata = {
   title: 'SENTINEL · The circuit breaker for autonomous AI agents',
@@ -21,7 +22,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 async function LandingStats() {
-  const data = await getLandingData(getServerNet());
+  const net = getServerNet();
+  const data = await getLandingData(net);
   return (
     <>
       <HeroCounters
@@ -29,15 +31,17 @@ async function LandingStats() {
         tvlMnt={data.tvlMnt}
         breakerCount={data.breakerCount}
       />
-      <WatchPanel events={data.recentEvents} />
+      <WatchPanel events={data.recentEvents} explorerBase={NETWORKS[net].explorerBase} />
     </>
   );
 }
 
 function WatchPanel({
   events,
+  explorerBase,
 }: {
   events: Awaited<ReturnType<typeof getLandingData>>['recentEvents'];
+  explorerBase: string;
 }) {
   return (
     <section className="mt-16">
@@ -56,7 +60,9 @@ function WatchPanel({
             No events yet. Agents will appear here once registered.
           </div>
         ) : (
-          events.map((event, i) => <EventRow key={i} event={event} />)
+          events.map((event, i) => (
+            <EventRow key={i} event={event} explorerBase={explorerBase} />
+          ))
         )}
       </div>
       <div className="mt-3 text-right">

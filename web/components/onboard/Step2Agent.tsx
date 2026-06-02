@@ -143,7 +143,7 @@ export function Step2Agent() {
                       Token #{t.tokenId.toString()}
                     </p>
                     <p className="font-mono text-sm text-sentinel-white mt-1">
-                      Agent: <AddressLink address={t.agentAddress} className="text-sentinel-white" />
+                      Agent: <AddressLink address={t.agentAddress} explorerBase={NETWORKS[net].explorerBase} className="text-sentinel-white" />
                     </p>
                   </div>
                   <span className="font-mono text-xs text-sentinel-cyan group-hover:translate-x-1 transition-transform">Select →</span>

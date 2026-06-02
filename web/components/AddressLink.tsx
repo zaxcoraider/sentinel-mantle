@@ -3,15 +3,13 @@ import type { Address } from 'viem';
 
 interface Props {
   address: Address;
-  explorerBase?: string;
+  // Required: the selected network's explorer base. No default — a hardcoded
+  // fallback caused links to point at the wrong network after the toggle.
+  explorerBase: string;
   className?: string;
 }
 
-export function AddressLink({
-  address,
-  explorerBase = 'https://explorer.sepolia.mantle.xyz',
-  className,
-}: Props) {
+export function AddressLink({ address, explorerBase, className }: Props) {
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
   return (
     <a

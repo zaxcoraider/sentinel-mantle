@@ -32,6 +32,12 @@ export function Nav({ hideLinks }: Props) {
               Watch
             </Link>
             <Link
+              href="/playground"
+              className="font-mono text-xs text-sentinel-cyan/80 hover:text-sentinel-cyan transition-colors tracking-wide uppercase"
+            >
+              AI Demo
+            </Link>
+            <Link
               href="/leaderboard"
               className="font-mono text-xs text-sentinel-gray-1 hover:text-sentinel-white transition-colors tracking-wide uppercase"
             >

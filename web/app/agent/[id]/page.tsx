@@ -4,6 +4,7 @@ import { Nav } from '@/components/Nav';
 import { SafetyRulesDisplay } from '@/components/agent/SafetyRulesDisplay';
 import { ReputationChart } from '@/components/agent/ReputationChart';
 import { RulesEditorButton } from '@/components/agent/RulesEditorButton';
+import { AiIncidentReport } from '@/components/agent/AiIncidentReport';
 import { getAgentDetail } from '@/lib/agent-data';
 import { getServerNet } from '@/lib/server-net';
 import { NETWORKS } from '@/lib/networks';
@@ -168,6 +169,9 @@ export default async function AgentPage({
               </div>
             </div>
           </div>
+
+          {/* AI incident / status report (DGrid haiku) */}
+          <AiIncidentReport agent={agent} net={net} paused={data.isPaused} />
 
           {/* Top grid: Reputation + Balance */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

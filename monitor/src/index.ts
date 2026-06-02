@@ -5,7 +5,7 @@
 // a `critical` result fires the on-chain circuit breaker via Trigger.
 // All significant events are also fanned out via SseHub -> GET /events (watch page).
 
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import { agentRegistryEvents, dexV2SwapEvent, sentinelGuardEvents } from "./abis.js";
 import { makePublicClient, viemClientFactory } from "./chain.js";
 import { loadConfig } from "./config.js";
@@ -14,14 +14,17 @@ import { createHealthServer, type HealthServer, type AgentStatusEntry } from "./
 import { EventListener } from "./listener.js";
 import { createLogger, type LogLevel } from "./log.js";
 import { AnomalyEngine } from "./anomaly.js";
+import { PythClient } from "./pyth.js";
 import { createViemRulesReader, RulesCache } from "./rules-cache.js";
 import { SseHub } from "./sse.js";
 import { StateStore } from "./state.js";
 import { createViemGuardWriter, Trigger } from "./trigger.js";
+import { createViemValuationChain, ValuationReader, tokensForChain } from "./valuation.js";
 import type {
   AgentDeregisteredPayload,
   AgentRegisteredPayload,
   AgentTxPayload,
+  AnomalyResult,
   ListenerErrorPayload,
   PriceUpdatePayload,
 } from "./types.js";
@@ -89,6 +92,64 @@ const main = (): void => {
     if (block !== null && block > lastBlock) lastBlock = block;
   };
 
+  // ---- Shared: broadcast anomaly results + fire the breaker on critical ----
+
+  const dispatchResults = async (
+    agent: Address,
+    tokenId: bigint,
+    results: AnomalyResult[],
+    evidence: { txHash?: Hex | null; block?: bigint | null },
+  ): Promise<void> => {
+    const block = evidence.block?.toString();
+    for (const r of results) {
+      if (r.severity === "warn") {
+        logger.warn("anomaly (warn)", { agent, type: r.type, message: r.message });
+        agentStatus.set(agent, {
+          agent,
+          status: "warn",
+          tokenId: tokenId.toString(),
+          lastSeenMs: Date.now(),
+        });
+        hub.broadcast("anomaly_warn", {
+          agent,
+          anomalyType: r.type,
+          message: r.message,
+          txHash: evidence.txHash,
+          block,
+        });
+      }
+    }
+
+    const critical = results.find((r) => r.severity === "critical");
+    if (!critical) return;
+
+    logger.error("CRITICAL anomaly", { agent, type: critical.type, message: critical.message });
+    agentStatus.set(agent, {
+      agent,
+      status: "tripped",
+      tokenId: tokenId.toString(),
+      lastSeenMs: Date.now(),
+    });
+    hub.broadcast("circuit_breaker", {
+      agent,
+      anomalyType: critical.type,
+      message: critical.message,
+      txHash: evidence.txHash,
+      block,
+    });
+
+    if (!trigger) return;
+    try {
+      const outcome = await trigger.fire(agent, critical.reasonHash, critical.message);
+      logger.info("trigger outcome", { agent, status: outcome.status });
+    } catch (err) {
+      logger.error("trigger failed", {
+        agent,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
   // ---- Core anomaly evaluation on each agent action ------------------------
 
   const handleAgentTx = async (p: AgentTxPayload): Promise<void> => {
@@ -126,59 +187,10 @@ const main = (): void => {
       timestamp: tsSec,
     });
 
-    for (const r of results) {
-      if (r.severity === "warn") {
-        logger.warn("anomaly (warn)", { agent: p.agent, type: r.type, message: r.message });
-        agentStatus.set(p.agent, {
-          agent: p.agent,
-          status: "warn",
-          tokenId: watched.tokenId.toString(),
-          lastSeenMs: Date.now(),
-        });
-        hub.broadcast("anomaly_warn", {
-          agent: p.agent,
-          anomalyType: r.type,
-          message: r.message,
-          txHash: p.txHash,
-          block: p.blockNumber?.toString(),
-        });
-      }
-    }
-
-    const critical = results.find((r) => r.severity === "critical");
-    if (!critical) return;
-
-    logger.error("CRITICAL anomaly", {
-      agent: p.agent,
-      type: critical.type,
-      message: critical.message,
-    });
-
-    agentStatus.set(p.agent, {
-      agent: p.agent,
-      status: "tripped",
-      tokenId: watched.tokenId.toString(),
-      lastSeenMs: Date.now(),
-    });
-    hub.broadcast("circuit_breaker", {
-      agent: p.agent,
-      anomalyType: critical.type,
-      message: critical.message,
+    await dispatchResults(p.agent, watched.tokenId, results, {
       txHash: p.txHash,
-      block: p.blockNumber?.toString(),
+      block: p.blockNumber,
     });
-
-    if (!trigger) return;
-
-    try {
-      const outcome = await trigger.fire(p.agent, critical.reasonHash, critical.message);
-      logger.info("trigger outcome", { agent: p.agent, status: outcome.status });
-    } catch (err) {
-      logger.error("trigger failed", {
-        agent: p.agent,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
   };
 
   // ---- Domain event consumers ---------------------------------------------
@@ -315,6 +327,54 @@ const main = (): void => {
 
   listener.start();
 
+  // ---- Valuation feed: value guarded balances -> drawdown detection --------
+  // Nothing else calls recordValuation, so this is what makes drawdown live.
+  // We value each agent's on-chain guard balance (real, readable) in USD via
+  // Pyth; a fall from the high-water mark past maxDrawdownBps trips the breaker.
+  const pyth = new PythClient({ endpoint: config.pythEndpoint });
+  const valuationReader = new ValuationReader({
+    chain: createViemValuationChain(
+      makePublicClient(config.rpcUrl, config.chainId),
+      config.addresses.sentinelGuard,
+    ),
+    pyth,
+    tokens: tokensForChain(config.chainId),
+  });
+  const valuationPollMs = Number(process.env.VALUATION_POLL_MS ?? 60_000);
+
+  const pollValuations = async (): Promise<void> => {
+    for (const agent of watchlist.activeAgents()) {
+      const watched = watchlist.get(agent);
+      if (!watched || !watched.active) continue;
+      try {
+        // A paused agent's value is frozen; skip to avoid re-firing post-rescue.
+        if (await valuationReader.isPaused(agent)) continue;
+        const valueUsd = await valuationReader.valueAgent(agent);
+        stateStore.recordValuation(agent, valueUsd);
+        const rules = await rulesCache.get(watched.rules);
+        const state = stateStore.get(agent);
+        // No tx/target/price/time context here, so only value-derived signals
+        // (drawdown) are meaningful — the rest are evaluated on agent_tx.
+        const results = engine
+          .evaluateAll(agent, state, rules, {})
+          .filter((r) => r.type === "MAX_DRAWDOWN");
+        if (results.length > 0) await dispatchResults(agent, watched.tokenId, results, {});
+      } catch (err) {
+        logger.warn("valuation poll failed (fail-open)", {
+          agent,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  };
+
+  const valuationTimer = setInterval(() => void pollValuations(), valuationPollMs);
+  const initialValuationTimer = setTimeout(() => void pollValuations(), 5_000);
+  logger.info("valuation feed active", {
+    pollMs: valuationPollMs,
+    tokens: tokensForChain(config.chainId).map((t) => t.symbol),
+  });
+
   // ---- Periodic state snapshot + health/SSE server -------------------------
 
   const persistTimer = setInterval(() => stateStore.persistAll(db), STATE_PERSIST_MS);
@@ -359,6 +419,8 @@ const main = (): void => {
     logger.info("shutting down", { signal });
     clearInterval(persistTimer);
     clearInterval(sseHeartbeatTimer);
+    clearInterval(valuationTimer);
+    clearTimeout(initialValuationTimer);
     listener.stop();
     health.close();
     stateStore.persistAll(db);

@@ -81,6 +81,16 @@ export const sentinelGuardFunctions = [
     inputs: [{ name: "agent", type: "address" }],
     outputs: [{ type: "bool" }],
   },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [
+      { name: "agent", type: "address" },
+      { name: "token", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
 ] as const;
 
 // SafetyRules: scalar rule getters (read by RulesCache) + the allowlist event

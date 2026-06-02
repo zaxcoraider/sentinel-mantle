@@ -17,12 +17,18 @@ export class PythError extends Error {
   }
 }
 
-// Well-known Pyth price feed IDs. VERIFY / extend from:
+// Well-known Pyth price feed IDs. IDs below were pulled verbatim from Hermes
+// (GET /v2/price_feeds?query=<symbol>&asset_type=crypto) on 2026-06-02 — the
+// authoritative source. Verify / extend from:
 //   https://pyth.network/developers/price-feed-ids
-// (Add MNT/USD, mETH/USD, USDY, USDe as needed for the guarded tokens.)
 export const PYTH_FEEDS = {
   "ETH/USD": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
   "BTC/USD": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+  // Mantle-native guarded assets.
+  "MNT/USD": "0x4e3037c822d852d79af3ac80e35eb420ee3b870dca49f9344a38ef4773fb0585",
+  "METH/USD": "0xfbc9c3a716650b6e24ab22ab85b1c0ef4141b18f4590cc0b986e2f9064cf73d6",
+  "USDY/USD": "0xe393449f6aff8a4b6d3e1165a7c9ebec103685f3b41e60db4277b5b6d10e7326",
+  "USDE/USD": "0x6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d",
 } as const satisfies Record<string, Hex>;
 
 interface HermesPriceFeed {

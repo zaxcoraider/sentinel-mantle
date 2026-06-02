@@ -78,7 +78,7 @@ export async function GET(
     type: REGISTRATION_TYPE,
     name: data.metadata?.name ?? `Sentinel-guarded agent ${short}`,
     description,
-    image: data.metadata?.image ?? `${appUrl}/logo-mark.png`,
+    image: data.metadata?.image ?? `${appUrl}/api/agent/${agent}/nft-image?net=${net}`,
     active: data.config.active && !data.isPaused,
     x402Support: false,
     services: [

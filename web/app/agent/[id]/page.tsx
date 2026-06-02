@@ -122,20 +122,14 @@ export default async function AgentPage({
             </div>
           )}
 
-          {/* Header */}
+          {/* Header — uses the on-chain NFT image if set, else our generated card */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <div className="flex gap-5 items-start animate-fade-up">
-            {data.metadata?.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={data.metadata.image}
-                alt={data.metadata.name ?? 'agent'}
-                className="w-20 h-20 border border-sentinel-blue/30 object-cover shrink-0 shadow-glow"
-              />
-            ) : (
-              <div className="w-20 h-20 border border-sentinel-gray-2 shrink-0 flex items-center justify-center text-sentinel-cyan text-2xl shadow-glow bg-white/[0.02]">
-                ◈
-              </div>
-            )}
+            <img
+              src={data.metadata?.image ?? `/api/agent/${agent}/nft-image?net=${net}`}
+              alt={data.metadata?.name ?? 'agent NFT'}
+              className="w-20 h-20 border border-sentinel-blue/30 object-cover shrink-0 shadow-glow"
+            />
             <div className="space-y-2.5 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-sans font-bold text-2xl text-sentinel-white tracking-tight">

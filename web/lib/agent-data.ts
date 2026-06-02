@@ -127,7 +127,9 @@ const fetchMetadata = async (
 
 // ---- Agent detail ----------------------------------------------------------
 
-const fetchAgentDetail = async (agent: Address, net: NetKey): Promise<AgentDetail> => {
+// Exported uncached for routes that can't tolerate unstable_cache's BigInt
+// serialization (e.g. the og/ImageResponse NFT image route).
+export const fetchAgentDetail = async (agent: Address, net: NetKey): Promise<AgentDetail> => {
   const cfg = NETWORKS[net];
   const client = publicClientFor(net);
   const SEP = cfg.deployments;

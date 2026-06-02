@@ -3,11 +3,16 @@ pragma solidity 0.8.24;
 
 /**
  * @title IERC8004Identity
- * @notice Minimal interface to the ERC-8004 Identity Registry curated by Mantle
- *         (github.com/mantlenetworkio/erc-8004-contracts). Sentinel reads agent
- *         identity through this interface and never forks the registry.
- * @dev Only the functions Sentinel needs are declared. The real registry is an
- *      ERC-721 in which each token represents one agent identity.
+ * @notice The identity surface Sentinel reads to resolve and authorize agents.
+ *         Each token is one agent identity (ERC-721). Sentinel ships its own
+ *         ERC-8004-style registry (AgentIdentityRegistry) implementing this
+ *         surface, because the canonical Mantle ERC-8004 registry
+ *         (github.com/mantlenetworkio/erc-8004-contracts) does not expose a
+ *         compatible getAgent(uint256) view.
+ * @dev This is NOT the EIP-8004 standard interface. `ownerOf` is standard
+ *      ERC-721; `getAgent` is a Sentinel convenience view (agent address +
+ *      registration URI), not part of EIP-8004. Sentinel is ERC-8004-inspired,
+ *      not ERC-8004-compliant.
  * @author Sentinel
  * @custom:security-contact security@sentinel.guard
  */

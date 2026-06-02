@@ -109,11 +109,15 @@ one instance, owned by the agent's human. Stores six rules and exposes
 
 ---
 
-### 4.2 IERC8004Identity.sol *(interface only — do not fork)*
+### 4.2 IERC8004Identity.sol *(the identity surface Sentinel reads)*
 
-**Purpose.** Minimal interface to the curated ERC-8004 Identity Registry
-(`mantlenetworkio/erc-8004-contracts`). Sentinel never forks it — it reads
-through this interface.
+**Purpose.** The minimal identity surface Sentinel reads to resolve and
+authorize agents. Sentinel ships its own ERC-8004-*style* registry
+(`AgentIdentityRegistry`) implementing this surface, because the canonical
+Mantle ERC-8004 registry (`mantlenetworkio/erc-8004-contracts`) does not expose
+a compatible `getAgent(uint256)` view. `ownerOf` is standard ERC-721; `getAgent`
+is a Sentinel convenience view, not part of EIP-8004 — so this is
+ERC-8004-*inspired*, not ERC-8004-compliant.
 
 ```
 function ownerOf(uint256 tokenId) external view returns (address);

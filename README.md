@@ -138,7 +138,7 @@ Frontend network: `NEXT_PUBLIC_CHAIN_ID=5000` (mainnet) or `5003` (sepolia) sets
 
 - **AI DevTools** — Sentinel is infrastructure for anyone shipping autonomous agents.
 - **AI × RWA** — guards Mantle-native RWA assets (mETH/USDY/USDe).
-- **Agentic Economy** — ERC-8004-native identity + an on-chain reputation scoreboard.
+- **Agentic Economy** — ERC-8004-style agent identity + an on-chain reputation scoreboard.
 
 ## Team & contact
 

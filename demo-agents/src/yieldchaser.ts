@@ -27,7 +27,7 @@ const NAME = 'yieldchaser' as const;
 const ROTATIONS_BEFORE_YOLO = 5;
 const ROTATION_AMOUNT = parseEther('0.0001');     // ~$0.05 of MNT
 const YOLO_RATIO = 50n;                            // 50% of remaining guard balance
-const TICK_MS = 60_000;                            // 60s between rotations
+const TICK_MS = 6_000;                             // 6s between rotations (dry-run pace)
 
 const main = async (): Promise<void> => {
   const keys = loadKeys();

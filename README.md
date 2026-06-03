@@ -143,7 +143,7 @@ Frontend network: `NEXT_PUBLIC_CHAIN_ID=5000` (mainnet) or `5003` (sepolia) sets
 ## Team & contact
 
 - GitHub: [zaxcoraider/sentinel-mantle](https://github.com/zaxcoraider/sentinel-mantle)
-- X / contact: _add before submission_
+- X: [@zax_raider](https://x.com/zax_raider)
 
 ## License
 

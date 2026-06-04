@@ -70,7 +70,7 @@ A RealClaw-style agent points its operating capital at a `SentinelGuard`, encode
 | 3 — Off-chain monitor | ✅ Done — **50** vitest tests, anomaly engine + Pyth + SSE + health |
 | 4 — Frontend | ✅ Done — 6 pages, redesigned, deployed to Vercel |
 | 5 — Demo agents + mainnet | ✅ Done — live + seeded on Mantle Mainnet; first breaker fired on-chain |
-| 6 — Polish + submission | 🔄 In progress |
+| 6 — Polish + submission | ✅ Done — submitted to [DoraHacks](https://dorahacks.io/buidl/44194), repo polished, X live |
 
 ## Live contracts
 

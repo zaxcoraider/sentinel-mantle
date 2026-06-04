@@ -15,7 +15,7 @@ export function Footer() {
             GitHub
           </a>
           <a
-            href="https://x.com"
+            href="https://x.com/Agent__Sentinel"
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-xs text-sentinel-gray-1 hover:text-sentinel-white transition-colors"

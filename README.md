@@ -13,12 +13,14 @@
 - **App:** https://agentsentinel.space
 - **Network switch:** test the whole flow on **free Mantle Sepolia** before trusting real funds on **Mantle Mainnet** — toggle in the nav.
 - **Contracts:** [verified on Mantlescan](https://mantlescan.xyz/address/0x929EC63c07A0d34358DF34ac073F2bf6eCF22642) (chain 5000)
-- **Demo video:** _coming soon_
-- **DoraHacks:** _submission link coming soon_
+- **Demo video:** https://youtu.be/gcGKwpL6f5s
+- **DoraHacks:** https://dorahacks.io/buidl/44194
 
 Built for the **Mantle Turing Test Hackathon 2026** — tracks: AI DevTools · AI × RWA · Agentic Economy.
 
-> _Screenshot / GIF of `/watch` during a live circuit-breaker event goes here._
+### ▶️ Watch the 2-minute demo
+
+[![Sentinel — circuit breaker for autonomous AI agents (demo)](https://img.youtube.com/vi/gcGKwpL6f5s/maxresdefault.jpg)](https://youtu.be/gcGKwpL6f5s)
 
 ## How it works
 
@@ -84,7 +86,17 @@ A RealClaw-style agent points its operating capital at a `SentinelGuard`, encode
 
 `EmergencyVault` enforces a **24-hour** timelock on mainnet.
 
-**Mantle Sepolia (chain 5003)** — full suite verified, for free testing (`EmergencyVault` timelock 5 min): SentinelGuard [`0xf4bB2b95…8Be0ba7`](https://sepolia.mantlescan.xyz/address/0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7). Full list in [`contracts/deployments/sepolia.json`](contracts/deployments/sepolia.json).
+**Mantle Sepolia (chain 5003)** — full suite verified, for free testing (`EmergencyVault` timelock 5 min):
+
+| Contract | Address |
+|---|---|
+| SentinelGuard | [`0xf4bB2b95…8Be0ba7`](https://sepolia.mantlescan.xyz/address/0xf4bB2b95414A1fE100310e85FD24e12e88Be0ba7) |
+| AgentRegistry | [`0xF09f8113…2ED5c41`](https://sepolia.mantlescan.xyz/address/0xF09f811397cbd9dE54a8505f22D4A276A2ED5c41) |
+| ReputationOracle | [`0x3C2Dc550…42113CC`](https://sepolia.mantlescan.xyz/address/0x3C2Dc550df5c8F497083C89Ad0F1Bd96942113CC) |
+| EmergencyVault | [`0x418BA815…7DD9865`](https://sepolia.mantlescan.xyz/address/0x418BA815CeaE1f4D3CE06E0190b6546647DD9865) |
+| MockIdentityRegistry | [`0x4DDd7464…a532432`](https://sepolia.mantlescan.xyz/address/0x4DDd7464d6159Cf37f21e9B1ccd074AD8a532432) |
+
+`MockIdentityRegistry` is the testnet stand-in for the ERC-8004 Identity Registry. Source of truth: [`contracts/deployments/sepolia.json`](contracts/deployments/sepolia.json).
 
 ## Stack
 
@@ -142,8 +154,10 @@ Frontend network: `NEXT_PUBLIC_CHAIN_ID=5000` (mainnet) or `5003` (sepolia) sets
 
 ## Team & contact
 
+- DoraHacks BUIDL: [dorahacks.io/buidl/44194](https://dorahacks.io/buidl/44194)
 - GitHub: [zaxcoraider/sentinel-mantle](https://github.com/zaxcoraider/sentinel-mantle)
-- X: [@zax_raider](https://x.com/zax_raider)
+- X (project): [@Agent__Sentinel](https://x.com/Agent__Sentinel)
+- X (maintainer): [@zax_raider](https://x.com/zax_raider)
 
 ## License
 
